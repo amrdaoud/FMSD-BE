@@ -10,9 +10,9 @@ namespace FMSD_BE.Controllers
 		private readonly IDashboardService _dashboardService = dashboardService;
 
 		[HttpGet("StationsReport")]
-		public async Task<IActionResult> firstReport()
+		public async Task<IActionResult> StationsReport(string? name, bool tcv)
 		{
-			var result = await _dashboardService.GetStationsReportAsync();
+			var result = await _dashboardService.GetStationReportAsync(name, tcv);
 
 			if (!string.IsNullOrEmpty(result.Message))
 				return BadRequest(new { message = result.Message });

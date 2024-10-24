@@ -27,8 +27,8 @@ namespace FMSD_BE.Helper
 
 	public class ChartApiResponse
 	{
-		public List<List<DataSetModel>> Datasets { get; set; } = [];
-		public List<List<string>> Labels { get; set; } = [];
-		public List<List<LookUpResponse>> Values { get; set; } = [];
+		public List<DataSetModel> Datasets { get; set; } = [];
+		public List<string> Labels { get; set; } = [];
+		public List<LookUpResponse> Values { get; set; } = [];
 	}
 }
