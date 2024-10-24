@@ -2,7 +2,7 @@
 
 namespace FMSD_BE.Helper
 {
-	public class ResultWithMessage(object data, string message)
+	public class ResultWithMessage(object data, string message)//FMS1
 	{
 		public Object? Data { get; set; } = data;
 		public string? Message { get; set; } = message;
