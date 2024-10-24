@@ -39,9 +39,16 @@ namespace FMSD_BE.Services.DashboardService
 					stationName = e.Key,
 					fuelVolume = e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.FuelVolume)).Sum(),
 					remeningFuel = (_db.Tanks.Where(t => t.Station.StationName == e.Key).Select(c => c.Capacity).Sum()) - (e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.FuelVolume)).Sum()),
-					BackgroundColor = "red",
+					BackgroundColor = e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.FuelVolume)).Sum() /
+									(_db.Tanks.Where(t => t.Station.StationName == e.Key).Select(c => c.Capacity).Sum()) <= 0.2 ? "rgba(255, 99, 132, 0.2)" :
+                                    e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.FuelVolume)).Sum() /
+                                    (_db.Tanks.Where(t => t.Station.StationName == e.Key).Select(c => c.Capacity).Sum()) <= 0.5 ? "rgba(255, 159, 64, 0.2)" : "rgba(75, 192, 192, 0.2)",
 					TCV = e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.Tcv)).Sum(),
-				})
+					TCVBacgroundColor = e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.Tcv)).Sum() /
+                                    (_db.Tanks.Where(t => t.Station.StationName == e.Key).Select(c => c.Capacity).Sum()) <= 0.2 ? "rgba(255, 99, 132, 0.2)" :
+                                    e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.Tcv)).Sum() /
+                                    (_db.Tanks.Where(t => t.Station.StationName == e.Key).Select(c => c.Capacity).Sum()) <= 0.5 ? "rgba(255, 159, 64, 0.2)" : "rgba(75, 192, 192, 0.2)"
+                })
 				.OrderBy(e => e.stationName)
 				.ToListAsync();
 
@@ -63,8 +70,8 @@ namespace FMSD_BE.Services.DashboardService
 						new DataSetModel
 						{
 							Data = stationDetails.Select(e=>e.remeningFuel).ToList(),
-							Label = "Remaining Fuel",
-							//BackgroundColor= stationDetails.Select(e=>e.BackgroundColor).ToList(),
+							Label = "Remaining",
+							BackgroundColor= new List<string>{"rgba(108, 122, 137)"},
 							//BorderColor = stationDetails.Select(e=>e.BackgroundColor).ToList(),
 							Fill = "start",
 							Stack="a"
@@ -75,7 +82,7 @@ namespace FMSD_BE.Services.DashboardService
 						new DataSetModel
 						{
 							Data = stationDetails.Select(e=>e.TCV).ToList(),
-							Label = "TCv Level",
+							Label = "TCV Level",
 							BackgroundColor= stationDetails.Select(e=>e.BackgroundColor).ToList(),
 							BorderColor = stationDetails.Select(e=>e.BackgroundColor).ToList(),
 							Fill = "start",
@@ -84,8 +91,8 @@ namespace FMSD_BE.Services.DashboardService
 						new DataSetModel
 						{
 							Data = stationDetails.Select(e=>e.remeningFuel).ToList(),
-							Label = "Remaining Fuel",
-							//BackgroundColor= stationDetails.Select(e=>e.BackgroundColor).ToList(),
+							Label = "Remaining",
+                            BackgroundColor= new List<string>{"rgba(108, 122, 137)"},
 							//BorderColor = stationDetails.Select(e=>e.BackgroundColor).ToList(),
 							Fill = "start",
 							Stack="a"
