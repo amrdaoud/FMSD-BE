@@ -17,13 +17,12 @@ namespace FMSD_BE.Services.DashboardService
 	{
 		private readonly CentralizedFmsCloneContext _db = db;
 
-		public async Task<ResultWithMessage> GetStationReportAsync(string? name, bool tcv)
+		public async Task<ResultWithMessage> GetCityReportAsync(string? name, bool tcv)
 		{
 			var stations = _db.Stations.Where(station => station.DeletedAt == null);
 
 			if (!string.IsNullOrEmpty(name))
 				stations = stations.Where(e => e.City.Trim().ToLower() == name.Trim().ToLower());
-
 
 			var query = stations.Select(station => new
 			{
@@ -37,15 +36,14 @@ namespace FMSD_BE.Services.DashboardService
 													.OrderByDescending(tm => tm.Id)
 													.FirstOrDefault(),
 											})
-			}).OrderBy(e => e.Station.StationName);
-
-
+			})
+			.OrderBy(e => e.Station.StationName);
 
 			var stationDetails = await query
-				.GroupBy(g => g.Station.StationName)
+				.GroupBy(g => g.Station.City)
 				.Select(e => new
 				{
-					stationName = e.Key,
+					City = e.Key,
 					fuelVolume = e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.FuelVolume)).Sum(),
 					remeningFuel = (_db.Tanks.Where(t => t.Station.StationName == e.Key).Select(c => c.Capacity).Sum()) - (e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.FuelVolume)).Sum()),
 
@@ -62,14 +60,13 @@ namespace FMSD_BE.Services.DashboardService
 									e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.Tcv)).Sum() /
 									(_db.Tanks.Where(t => t.Station.StationName == e.Key).Select(c => c.Capacity).Sum()) <= 0.5 ? "rgba(255, 159, 64, 0.2)" : "rgba(75, 192, 192, 0.2)"
 				})
-				.OrderBy(e => e.stationName)
+				.OrderBy(e => e.City)
 				.ToListAsync();
 
 			var result = new ChartApiResponse
 			{
 				Datasets =
-					new List<DataSetModel>
-					{
+					[
 						new DataSetModel
 						{
 							Data = tcv ? stationDetails.Select(e=>e.TCV).ToList() : stationDetails.Select(e=>e.fuelVolume).ToList(),
@@ -88,28 +85,24 @@ namespace FMSD_BE.Services.DashboardService
 							Fill = "start",
 							Stack="a"
 						}
-				},
-
-				Labels =
-
-					stationDetails.Select(e => e.stationName).ToList()
-				//stationDetails.Select(e=>e.stationName).ToList()
-				,
-
-				Values = []
+				],
+				Labels = stationDetails.Select(e => e.City).ToList(),
+				Values = [ new LookUpResponse {
+					Name = "Fill%",
+					Value = Math.Round ( (stationDetails.Select(e=>e.fuelVolume).Sum() / ( stationDetails.Select(e=>e.remeningFuel).Sum() + stationDetails.Select(e=>e.fuelVolume).Sum() ) ) * 100).ToString() + "%"
+				}]
 			};
 
 
 			return new ResultWithMessage(result, string.Empty);
 		}
 
-		public async Task<ResultWithMessage> GetCityReportAsync(string? name, bool tcv)
+		public async Task<ResultWithMessage> GetStationReportAsync(string? name, bool tcv)
 		{
 			var stations = _db.Stations.Where(station => station.DeletedAt == null);
 
 			if (!string.IsNullOrEmpty(name))
 				stations = stations.Where(e => e.City.Trim().ToLower() == name.Trim().ToLower());
-
 
 			var query = stations.Select(station => new
 			{
@@ -125,10 +118,8 @@ namespace FMSD_BE.Services.DashboardService
 											})
 			}).OrderBy(e => e.Station.StationName);
 
-
-
 			var stationDetails = await query
-				.GroupBy(g => g.Station.City)
+				.GroupBy(g => g.Station.StationName)
 				.Select(e => new
 				{
 					stationName = e.Key,
