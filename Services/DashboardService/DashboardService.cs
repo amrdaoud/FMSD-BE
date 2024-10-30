@@ -24,7 +24,7 @@ namespace FMSD_BE.Services.DashboardService
 			if (!isValidCityName)
 				return new ResultWithMessage(null, $"Invalid city Name: {name}");
 
-			var stations = _db.Stations.Where(station => station.DeletedAt == null);
+			var stations = _db.Stations.Where(station => station.DeletedAt == null && !string.IsNullOrEmpty(station.StationType));
 
 			if (!string.IsNullOrEmpty(name))
 				stations = stations.Where(e => e.City.Trim().ToLower() == name.Trim().ToLower());
