@@ -19,7 +19,12 @@ namespace FMSD_BE.Services.DashboardService
 
 		public async Task<ResultWithMessage> GetCityReportAsync(string? name, bool tcv)
 		{
-			var stations = _db.Stations.Where(station => station.DeletedAt == null);
+			var isValidCityName = await _db.Stations.AnyAsync(e => e.City.Trim().ToLower() == name.Trim().ToLower());
+
+			if (!isValidCityName)
+				return new ResultWithMessage(null, $"Invalid city Name: {name}");
+
+			var stations = _db.Stations.Where(station => station.DeletedAt == null && !string.IsNullOrEmpty(station.StationType));
 
 			if (!string.IsNullOrEmpty(name))
 				stations = stations.Where(e => e.City.Trim().ToLower() == name.Trim().ToLower());
@@ -52,14 +57,13 @@ namespace FMSD_BE.Services.DashboardService
 					temperature = e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.Temperature)).Max(),
 					waterVolume = e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.WaterVolume)).Sum(),
 
-
 					BackgroundColor = e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.FuelVolume)).Sum() / e.SelectMany(t => t.Tanks.Select(c => c.Tank.Capacity)).Sum() <= 0.2 ? "rgba(255, 99, 132, 0.2)" :
 										e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.FuelVolume)).Sum() / e.SelectMany(t => t.Tanks.Select(c => c.Tank.Capacity)).Sum() <= 0.5 ? "rgba(255, 159, 64, 0.2)" :
 										"rgba(75, 192, 192, 0.2)",
+
 					TCVBacgroundColor = e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.Tcv)).Sum() / e.SelectMany(t => t.Tanks.Select(c => c.Tank.Capacity)).Sum() <= 0.2 ? "rgba(255, 99, 132, 0.2)" :
 										e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.Tcv)).Sum() / e.SelectMany(t => t.Tanks.Select(c => c.Tank.Capacity)).Sum() <= 0.5 ? "rgba(255, 159, 64, 0.2)" :
-										"rgba(75, 192, 192, 0.2)",
-
+										"rgba(75, 192, 192, 0.2)"
 				})
 				.OrderBy(e => e.city)
 				.ToListAsync();
@@ -111,7 +115,6 @@ namespace FMSD_BE.Services.DashboardService
 				]
 			};
 
-
 			return new ResultWithMessage(result, string.Empty);
 		}
 
@@ -120,7 +123,7 @@ namespace FMSD_BE.Services.DashboardService
 			var stations = _db.Stations.Where(station => station.DeletedAt == null);
 
 			if (!string.IsNullOrEmpty(name))
-				stations = stations.Where(e => e.City.Trim().ToLower() == name.Trim().ToLower());
+				stations = stations.Where(e => e.City.Trim().ToLower() == name.Trim().ToLower() && !string.IsNullOrEmpty(e.StationType));
 
 			var query = stations.Select(station => new
 			{
@@ -134,7 +137,8 @@ namespace FMSD_BE.Services.DashboardService
 													.OrderByDescending(tm => tm.Id)
 													.FirstOrDefault(),
 											})
-			}).OrderBy(e => e.Station.StationName);
+			})
+			.OrderBy(e => e.Station.StationName);
 
 			var stationDetails = await query
 				.GroupBy(g => g.Station.StationName)
@@ -142,32 +146,32 @@ namespace FMSD_BE.Services.DashboardService
 				{
 					stationName = e.Key,
 					fuelVolume = e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.FuelVolume)).Sum(),
-					remeningFuel = (_db.Tanks.Where(t => t.Station.StationName == e.Key).Select(c => c.Capacity).Sum()) - (e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.FuelVolume)).Sum()),
+					capacity = e.SelectMany(t => t.Tanks.Select(c => c.Tank.Capacity)).Sum(),
+					remeningFuel = e.SelectMany(t => t.Tanks.Select(c => c.Tank.Capacity)).Sum() - e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.FuelVolume)).Sum(),
+					tcv = e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.Tcv)).Sum(),
+					tcvRemaining = e.SelectMany(t => t.Tanks.Select(c => c.Tank.Capacity)).Sum() - e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.Tcv)).Sum(),
+					temperature = e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.Temperature)).Max(),
+					waterVolume = e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.WaterVolume)).Sum(),
 
-					BackgroundColor = e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.FuelVolume)).Sum() /
-									(_db.Tanks.Where(t => t.Station.StationName == e.Key).Select(c => c.Capacity).Sum()) <= 0.2 ? "rgba(255, 99, 132, 0.2)" :
-									e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.FuelVolume)).Sum() /
-									(_db.Tanks.Where(t => t.Station.StationName == e.Key).Select(c => c.Capacity).Sum()) <= 0.5 ? "rgba(255, 159, 64, 0.2)" : "rgba(75, 192, 192, 0.2)",
+					BackgroundColor = e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.FuelVolume)).Sum() / e.SelectMany(t => t.Tanks.Select(c => c.Tank.Capacity)).Sum() <= 0.2 ? "rgba(255, 99, 132, 0.2)" :
+										e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.FuelVolume)).Sum() / e.SelectMany(t => t.Tanks.Select(c => c.Tank.Capacity)).Sum() <= 0.5 ? "rgba(255, 159, 64, 0.2)" :
+										"rgba(75, 192, 192, 0.2)",
 
-					TCV = e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.Tcv)).Sum(),
-					TCVRemaining = (_db.Tanks.Where(t => t.Station.StationName == e.Key).Select(c => c.Capacity).Sum()) - (e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.Tcv)).Sum()),
-
-					TCVBacgroundColor = e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.Tcv)).Sum() /
-									(_db.Tanks.Where(t => t.Station.StationName == e.Key).Select(c => c.Capacity).Sum()) <= 0.2 ? "rgba(255, 99, 132, 0.2)" :
-									e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.Tcv)).Sum() /
-									(_db.Tanks.Where(t => t.Station.StationName == e.Key).Select(c => c.Capacity).Sum()) <= 0.5 ? "rgba(255, 159, 64, 0.2)" : "rgba(75, 192, 192, 0.2)"
+					TCVBacgroundColor = e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.Tcv)).Sum() / e.SelectMany(t => t.Tanks.Select(c => c.Tank.Capacity)).Sum() <= 0.2 ? "rgba(255, 99, 132, 0.2)" :
+										e.SelectMany(t => t.Tanks.Select(l => l.LastMeasurement.Tcv)).Sum() / e.SelectMany(t => t.Tanks.Select(c => c.Tank.Capacity)).Sum() <= 0.5 ? "rgba(255, 159, 64, 0.2)" :
+										"rgba(75, 192, 192, 0.2)"
 				})
 				.OrderBy(e => e.stationName)
 				.ToListAsync();
 
+
 			var result = new ChartApiResponse
 			{
 				Datasets =
-					new List<DataSetModel>
-					{
+					[
 						new DataSetModel
 						{
-							Data = tcv ? stationDetails.Select(e=>e.TCV).ToList() : stationDetails.Select(e=>e.fuelVolume).ToList(),
+							Data = tcv ? stationDetails.Select(e=>e.tcv).ToList() : stationDetails.Select(e=>e.fuelVolume).ToList(),
 							Label = "Fuel Level",
 							BackgroundColor=tcv ?stationDetails.Select(e=>e.TCVBacgroundColor).ToList():  stationDetails.Select(e=>e.BackgroundColor).ToList(),
 							BorderColor = tcv ?stationDetails.Select(e=>e.TCVBacgroundColor).ToList():  stationDetails.Select(e=>e.BackgroundColor).ToList(),
@@ -178,22 +182,34 @@ namespace FMSD_BE.Services.DashboardService
 						{
 							Data = stationDetails.Select(e=>e.remeningFuel).ToList(),
 							Label = "Remaining",
-							BackgroundColor= new List<string>{"rgba(108, 122, 137)"},
-							//BorderColor = stationDetails.Select(e=>e.BackgroundColor).ToList(),
+							BackgroundColor= ["rgba(108, 122, 137)"],
+							BorderColor = stationDetails.Select(e=>e.BackgroundColor).ToList(),
 							Fill = "start",
 							Stack="a"
 						}
-				},
+				],
+				Labels = stationDetails.Select(e => e.stationName).ToList(),
 
-				Labels =
-
-					stationDetails.Select(e => e.stationName).ToList()
-				//stationDetails.Select(e=>e.stationName).ToList()
-				,
-
-				Values = []
+				Values =
+				[
+					new LookUpResponse {
+						Name = "Fill%",
+						Value = Math.Round (stationDetails.Select(e=>e.fuelVolume).Sum() / stationDetails.Select(e=>e.capacity).Sum()* 100).ToString() + "%"
+					},
+					new LookUpResponse {
+						Name = "TCV Fill%",
+						Value = Math.Round (stationDetails.Select(e=>e.tcv).Sum() / stationDetails.Select(e=>e.capacity).Sum() * 100).ToString() + "%"
+					},
+					new LookUpResponse {
+						Name = "Max Temperature",
+						Value = stationDetails.Select(e=>e.temperature).Max().ToString()
+					},
+					new LookUpResponse {
+						Name = "Max Water%",
+						Value = Math.Round (stationDetails.Select(e=>e.waterVolume).Sum() / stationDetails.Select(e=>e.fuelVolume).Sum() * 100).ToString() + "%"
+					},
+				]
 			};
-
 
 			return new ResultWithMessage(result, string.Empty);
 		}
