@@ -2,6 +2,7 @@
 using FMSD_BE.Services.ReportService.AlarmService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 
 namespace FMSD_BE.Controllers
 {
@@ -27,6 +28,16 @@ namespace FMSD_BE.Controllers
             return Ok(response);
         }
 
+        [HttpPost("ExportAlarms")]
 
+        public IActionResult ExportAlarms(AlarmRequesViewModel input)
+        {
+            var fileResult = _alarmService.ExportAlarms(input);
+
+            if (fileResult.Bytes == null || fileResult.Bytes.Count() == 0)
+                return BadRequest(new { message = "No Data To Export." });
+
+            return File(fileResult.Bytes, fileResult.ContentType, fileResult.FileName);
+        }
     }
 }
