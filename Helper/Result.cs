@@ -12,7 +12,8 @@ namespace FMSD_BE.Helper
 	{
 		public int DataSize { get; set; } = dataSize;
 		public object Data { get; set; } = data;
-	}
+
+    }
 
 	public class DataSetModel
 	{
