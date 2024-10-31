@@ -19,11 +19,6 @@ namespace FMSD_BE.Services.DashboardService
 
 		public async Task<ResultWithMessage> GetCityReportAsync(string? name, bool tcv)
 		{
-			var isValidCityName = await _db.Stations.AnyAsync(e => e.City.Trim().ToLower() == name.Trim().ToLower());
-
-			if (!isValidCityName)
-				return new ResultWithMessage(null, $"Invalid city Name: {name}");
-
 			var stations = _db.Stations.Where(station => station.DeletedAt == null && !string.IsNullOrEmpty(station.StationType));
 
 			if (!string.IsNullOrEmpty(name))
@@ -120,10 +115,10 @@ namespace FMSD_BE.Services.DashboardService
 
 		public async Task<ResultWithMessage> GetStationReportAsync(string? name, bool tcv)
 		{
-			var stations = _db.Stations.Where(station => station.DeletedAt == null);
+			var stations = _db.Stations.Where(station => station.DeletedAt == null && !string.IsNullOrEmpty(station.StationType));
 
 			if (!string.IsNullOrEmpty(name))
-				stations = stations.Where(e => e.City.Trim().ToLower() == name.Trim().ToLower() && !string.IsNullOrEmpty(e.StationType));
+				stations = stations.Where(e => e.City.Trim().ToLower() == name.Trim().ToLower());
 
 			var query = stations.Select(station => new
 			{
