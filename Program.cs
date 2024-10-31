@@ -1,5 +1,6 @@
 using FMSD_BE.Data;
 using FMSD_BE.Services.DashboardService;
+using FMSD_BE.Services.ReportService.AlarmService;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,9 @@ builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<CentralizedFmsCloneContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IAlarmService, AlarmService>();
+
+
 builder.Services.AddCors(o => o.AddPolicy("CorsPolicy", builder =>
 {
     builder.AllowAnyMethod()
