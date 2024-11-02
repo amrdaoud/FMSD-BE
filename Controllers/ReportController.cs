@@ -1,5 +1,6 @@
 ﻿using FMSD_BE.Dtos.ReportDtos.AlarmDtos;
 using FMSD_BE.Services.ReportService.AlarmService;
+using FMSD_BE.Services.ReportService.TankService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
@@ -12,9 +13,12 @@ namespace FMSD_BE.Controllers
     {
         private readonly IAlarmService _alarmService;
 
-        public ReportController(IAlarmService alarmService)
+        private readonly ITankService _tankService;
+
+        public ReportController(IAlarmService alarmService , ITankService tankService)
         {
             _alarmService = alarmService;
+            _tankService = tankService;
         }
 
         [HttpPost("GetAlarms")]
@@ -39,5 +43,8 @@ namespace FMSD_BE.Controllers
 
             return File(fileResult.Bytes, fileResult.ContentType, fileResult.FileName);
         }
+
+
+
     }
 }
