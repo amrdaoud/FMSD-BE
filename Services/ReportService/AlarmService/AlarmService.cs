@@ -19,7 +19,7 @@ namespace FMSD_BE.Services.ReportService.AlarmService
             _dbContext = dbContext;
         }
 
-        public async Task<DataWithSize> GetAlarms(AlarmRequesViewModel input)
+        public async Task<DataWithSize> GetAlarms(AlarmRequestViewModel input)
         {
 
             if(input.StartDate != null && input.EndDate != null)
@@ -51,9 +51,9 @@ namespace FMSD_BE.Services.ReportService.AlarmService
                 InactiveTime = x.UpdatedAt,
                 AcknowledgeTime = x.AcknowledgedTime
 
-            }).ToList();
+            });
 
-            queryViewModel = queryViewModel.ApplySorting(generalFilterModel);
+            queryViewModel = queryViewModel.ApplySortingQuerable(generalFilterModel);
 
             var paginitionViewModel = queryViewModel.ToPagedResult(generalFilterModel);
 
@@ -62,7 +62,7 @@ namespace FMSD_BE.Services.ReportService.AlarmService
 
         }
 
-        public FileBytesModel ExportAlarms(AlarmRequesViewModel input)
+        public FileBytesModel ExportAlarms(AlarmRequestViewModel input)
         {
             if (input.StartDate != null && input.EndDate != null)
             {

@@ -18,14 +18,16 @@ namespace FMSD_BE.CustomValidations.GeneralValidation
             var startDateProperty = validationContext.ObjectType.GetProperty(_startDatePropertyName);
             var endDateProperty = validationContext.ObjectType.GetProperty(_endDatePropertyName);
 
-            if (startDateProperty == null || endDateProperty == null)
-            {
-                return new ValidationResult($"Unknown properties: {_startDatePropertyName} or {_endDatePropertyName}");
-            }
+            
 
             if (startDateProperty == null && endDateProperty == null)
             {
                 return ValidationResult.Success;
+            }
+
+            if (startDateProperty == null || endDateProperty == null)
+            {
+                return new ValidationResult($"Unknown properties: {_startDatePropertyName} or {_endDatePropertyName}");
             }
 
             var startDate = (DateTime?)startDateProperty.GetValue(validationContext.ObjectInstance);

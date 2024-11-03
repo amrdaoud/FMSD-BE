@@ -1,4 +1,5 @@
 ﻿using FMSD_BE.Dtos.ReportDtos.AlarmDtos;
+using FMSD_BE.Dtos.ReportDtos.TankDtos;
 using FMSD_BE.Services.ReportService.AlarmService;
 using FMSD_BE.Services.ReportService.TankService;
 using Microsoft.AspNetCore.Http;
@@ -22,7 +23,7 @@ namespace FMSD_BE.Controllers
         }
 
         [HttpPost("GetAlarms")]
-        public async Task<ActionResult> GetAlarms(AlarmRequesViewModel input)
+        public async Task<ActionResult> GetAlarms(AlarmRequestViewModel input)
         {
             if (!ModelState.IsValid)
             {
@@ -33,8 +34,7 @@ namespace FMSD_BE.Controllers
         }
 
         [HttpPost("ExportAlarms")]
-
-        public IActionResult ExportAlarms(AlarmRequesViewModel input)
+        public IActionResult ExportAlarms(AlarmRequestViewModel input)
         {
             var fileResult = _alarmService.ExportAlarms(input);
 
@@ -45,6 +45,16 @@ namespace FMSD_BE.Controllers
         }
 
 
+        [HttpPost("GetTanks")]
+        public async Task<ActionResult> GetTanks(TankRequestViewModel input)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var response = await _tankService.GetTankMeasurements(input);
+            return Ok(response);
+        }
 
     }
 }
