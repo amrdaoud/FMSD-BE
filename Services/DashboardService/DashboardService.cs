@@ -8,9 +8,7 @@ namespace FMSD_BE.Services.DashboardService
 	{
 		Task<ResultWithMessage> GetCityReportAsync(string? name, bool tcv);
 		Task<ResultWithMessage> GetStationReportAsync(string? name, bool tcv);
-		//Task<ResultWithMessage> GetTankReportAsync(string? name, bool tcv);
-
-		//Task<ResultWithMessage> GetStationsReportAsync();
+		Task<ResultWithMessage> GetTankReport(string? name, bool tcv);
 	}
 
 	public class DashboardService(CentralizedFmsCloneContext db) : IDashboardService
@@ -112,7 +110,6 @@ namespace FMSD_BE.Services.DashboardService
 
 			return new ResultWithMessage(result, string.Empty);
 		}
-
 		public async Task<ResultWithMessage> GetStationReportAsync(string? name, bool tcv)
 		{
 			var stations = _db.Stations.Where(station => station.DeletedAt == null && !string.IsNullOrEmpty(station.StationType));
@@ -203,6 +200,90 @@ namespace FMSD_BE.Services.DashboardService
 						Name = "Max Water%",
 						Value = Math.Round (stationDetails.Select(e=>e.waterVolume).Sum() / stationDetails.Select(e=>e.fuelVolume).Sum() * 100).ToString() + "%"
 					},
+				]
+			};
+
+			return new ResultWithMessage(result, string.Empty);
+		}
+		public async Task<ResultWithMessage> GetTankReport(string? name, bool tcv)
+		{
+			var query = _db.Tanks.Where(e => e.TankStatusId == 2 && e.Station.DeletedAt == null && !string.IsNullOrEmpty(e.Station.StationType));
+
+			if (!string.IsNullOrEmpty(name))
+				query = query.Where(e => e.Station.StationName.Trim().ToLower() == name.Trim().ToLower());
+
+			var tankDetails = await query
+				.Select(t => new
+				{
+					tankName = t.Station.StationName + "/" + t.TankName,
+					LastMeasurement = t.TankMeasurements
+										.OrderByDescending(tm => tm.Id)
+										.Select(lm => new
+										{
+											capacity = t.Capacity,
+											fuelVolume = lm.FuelVolume,
+											remainingFuel = t.Capacity - lm.FuelVolume,
+											tcv = lm.Tcv,
+											tcvRemaining = t.Capacity - lm.Tcv,
+											temperature = lm.Temperature,
+											waterVolume = lm.WaterVolume,
+
+											backgroundColor = lm.FuelVolume / t.Capacity <= 0.2 ? "rgba(255, 99, 132, 0.2)" :
+															 lm.FuelVolume / t.Capacity <= 0.5 ? "rgba(255, 159, 64, 0.2)" :
+															 "rgba(75, 192, 192, 0.2)",
+
+											tcvBacgroundColor = lm.Tcv / t.Capacity <= 0.2 ? "rgba(255, 99, 132, 0.2)" :
+																lm.Tcv / t.Capacity <= 0.5 ? "rgba(255, 159, 64, 0.2)" :
+																"rgba(75, 192, 192, 0.2)"
+										})
+										.FirstOrDefault()
+				})
+				.OrderBy(e => e.tankName)
+				.ToListAsync();
+
+			var result = new ChartApiResponse
+			{
+				Datasets =
+					[
+						new DataSetModel
+						{
+							Data = tcv ? tankDetails.Select(e=>e.LastMeasurement.tcv).ToList() : tankDetails.Select(e=>e.LastMeasurement.fuelVolume).ToList(),
+							Label = "Fuel Level",
+							BackgroundColor=tcv ? tankDetails.Select(e=>e.LastMeasurement.tcvBacgroundColor).ToList() :   tankDetails.Select(e=>e.LastMeasurement.backgroundColor).ToList(),
+							BorderColor = tcv ? tankDetails.Select(e=>e.LastMeasurement.tcvBacgroundColor).ToList() :   tankDetails.Select(e=>e.LastMeasurement.backgroundColor).ToList(),
+							Fill = "start",
+							Stack="a"
+						},
+						new DataSetModel
+						{
+							Data = tankDetails.Select(e=>e.LastMeasurement.remainingFuel).ToList(),
+							Label = "Remaining",
+							BackgroundColor= ["rgba(108, 122, 137)"],
+							BorderColor = tankDetails.Select(e=>e.LastMeasurement.tcvBacgroundColor).ToList() ,
+							Fill = "start",
+							Stack="a"
+						}
+				],
+				Labels = tankDetails.Select(e => e.tankName).ToList(),
+
+				Values =
+				[
+					new LookUpResponse {
+						Name = "Fill%",
+						Value = Math.Round (tankDetails.Select(e=>e.LastMeasurement.fuelVolume).Sum() / tankDetails.Select(e=>e.LastMeasurement.capacity).Sum() * 100).ToString() + "%"
+					},
+					new LookUpResponse {
+						Name = "TCV Fill%",
+						Value = Math.Round (tankDetails.Select(e=>e.LastMeasurement.tcv).Sum()/ tankDetails.Select(e=>e.LastMeasurement.capacity).Sum() * 100).ToString() + "%"
+					},
+					new LookUpResponse {
+						Name = "Max Temperature",
+						Value = tankDetails.Select(e=>e.LastMeasurement.temperature).Max().ToString()
+					},
+					new LookUpResponse {
+						Name = "Max Water%",
+						Value = Math.Round (tankDetails.Select(e=>e.LastMeasurement.waterVolume).Sum() / tankDetails.Select(e=>e.LastMeasurement.fuelVolume).Sum() * 100).ToString() + "%"
+					}
 				]
 			};
 
