@@ -30,5 +30,16 @@ namespace FMSD_BE.Controllers
 
 			return Ok(result.Data);
 		}
+
+		[HttpGet("TankReport")]
+		public async Task<IActionResult> TankReport(string? name, bool tcv)
+		{
+			var result = await _dashboardService.GetTankReport(name, tcv);
+
+			if (!string.IsNullOrEmpty(result.Message))
+				return BadRequest(new { message = result.Message });
+
+			return Ok(result.Data);
+		}
 	}
 }
