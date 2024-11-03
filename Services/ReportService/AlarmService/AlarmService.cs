@@ -4,6 +4,7 @@ using FMSD_BE.Dtos.SharedDto;
 using FMSD_BE.Helper;
 using FMSD_BE.Helper.Extensions;
 using FMSD_BE.Models;
+using FMSD_BE.Services.SharedService;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
@@ -62,7 +63,7 @@ namespace FMSD_BE.Services.ReportService.AlarmService
 
         }
 
-        public FileBytesModel ExportAlarms(AlarmRequestViewModel input)
+        public List<object> ExportAlarms(AlarmRequestViewModel input)
         {
             if (input.StartDate != null && input.EndDate != null)
             {
@@ -97,39 +98,10 @@ namespace FMSD_BE.Services.ReportService.AlarmService
 
             queryViewModel = queryViewModel.ApplySorting(generalFilterModel);
 
+            var exportData = queryViewModel.Cast<object>().ToList();
 
-            //-----------------------------------------------------------------------
-            if (queryViewModel == null || queryViewModel.Count() == 0)
-                return new FileBytesModel();
 
-            FileBytesModel excelfile = new();
-
-            ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
-            var stream = new MemoryStream();
-            var package = new ExcelPackage(stream);
-            var workSheet = package.Workbook.Worksheets.Add("Sheet1");
-            workSheet.Cells.LoadFromCollection(queryViewModel, true);
-
-            List<int> dateColumns = new();
-            int datecolumn = 1;
-            foreach (var PropertyInfo in queryViewModel.FirstOrDefault().GetType().GetProperties())
-            {
-                if (PropertyInfo.PropertyType == typeof(DateTime) || PropertyInfo.PropertyType == typeof(DateTime?))
-                {
-                    dateColumns.Add(datecolumn);
-                }
-                datecolumn++;
-            }
-            dateColumns.ForEach(item => workSheet.Column(item).Style.Numberformat.Format = "dd/mm/yyyy hh:mm:ss AM/PM");
-            package.Save();
-            excelfile.Bytes = stream.ToArray();
-            stream.Position = 0;
-            stream.Close();
-            string excelName = $"Alarm-Report-{DateTime.Now.ToString("yyyyMMddHHmmssfff")}.xlsx";
-            string contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-            excelfile.FileName = excelName;
-            excelfile.ContentType = contentType;
-            return excelfile;
+            return exportData;
         }
 
         private IQueryable<Alarm> ExtraFilter(IQueryable<Alarm> query, DateTime? start , DateTime? end ,

@@ -2,6 +2,7 @@
 using FMSD_BE.Dtos.ReportDtos.TankDtos;
 using FMSD_BE.Services.ReportService.AlarmService;
 using FMSD_BE.Services.ReportService.TankService;
+using FMSD_BE.Services.SharedService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
@@ -15,11 +16,14 @@ namespace FMSD_BE.Controllers
         private readonly IAlarmService _alarmService;
 
         private readonly ITankService _tankService;
+        private readonly ISharedService _sharedService;
 
-        public ReportController(IAlarmService alarmService , ITankService tankService)
+
+        public ReportController(IAlarmService alarmService , ITankService tankService, ISharedService sharedService)
         {
             _alarmService = alarmService;
             _tankService = tankService;
+            _sharedService = sharedService;
         }
 
         [HttpPost("GetAlarms")]
@@ -36,7 +40,8 @@ namespace FMSD_BE.Controllers
         [HttpPost("ExportAlarms")]
         public IActionResult ExportAlarms(AlarmRequestViewModel input)
         {
-            var fileResult = _alarmService.ExportAlarms(input);
+            var result = _alarmService.ExportAlarms(input);
+            var fileResult = _sharedService.ExportDynamicDataToExcel(result,"Alarm");
 
             if (fileResult.Bytes == null || fileResult.Bytes.Count() == 0)
                 return BadRequest(new { message = "No Data To Export." });

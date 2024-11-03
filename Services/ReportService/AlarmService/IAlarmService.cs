@@ -7,6 +7,6 @@ namespace FMSD_BE.Services.ReportService.AlarmService
     public interface IAlarmService
     {
         Task<DataWithSize> GetAlarms(AlarmRequestViewModel input);
-        FileBytesModel ExportAlarms(AlarmRequestViewModel input);
+        List<object> ExportAlarms(AlarmRequestViewModel input);
     }
 }
