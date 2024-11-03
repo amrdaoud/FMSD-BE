@@ -61,5 +61,18 @@ namespace FMSD_BE.Controllers
             return Ok(response);
         }
 
+        [HttpPost("ExportTankMeasurements")]
+        public IActionResult ExportAlarms(TankRequestViewModel input)
+        {
+            var result = _tankService.ExportTankMeasurements(input);
+
+            var fileResult = _sharedService.ExportDynamicDataToExcel(result, "TankMeasurements");
+
+            if (fileResult.Bytes == null || fileResult.Bytes.Count() == 0)
+                return BadRequest(new { message = "No Data To Export." });
+
+            return File(fileResult.Bytes, fileResult.ContentType, fileResult.FileName);
+        }
+
     }
 }

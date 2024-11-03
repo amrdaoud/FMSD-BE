@@ -8,6 +8,7 @@ namespace FMSD_BE.Services.ReportService.TankService
     public interface ITankService
     {
         Task<DataWithSize> GetTankMeasurements(TankRequestViewModel input);
-        FileBytesModel ExportTankMeasurements(TankRequestViewModel input);
+
+        List<object> ExportTankMeasurements(TankRequestViewModel input);
     }
 }
