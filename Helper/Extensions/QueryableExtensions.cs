@@ -68,7 +68,7 @@ namespace FMSD_BE.Helper.Extensions
             return list;
         }
 
-        public static  PagedResult<T> ToPagedResult<T>(this List<T> query, GeneralFilterModel filterModel)
+        public static  PagedResult<T> ToPagedResult<T>(this IQueryable<T> query, GeneralFilterModel filterModel)
         {
             var totalCount =  query.Count();
             var items =  query
@@ -96,6 +96,45 @@ namespace FMSD_BE.Helper.Extensions
                 type = property.PropertyType;
             }
             return property;
+        }
+
+        public static IQueryable<T> ApplySortingQuerable<T>(this IQueryable<T> list, GeneralFilterModel filterModel)
+        {
+            if (!string.IsNullOrEmpty(filterModel.SortActive))
+            {
+                // Determine the sorting direction
+                string direction = filterModel.SortDirection?.ToLower() == "desc" ? "descending" : "ascending";
+
+                if(direction == "ascending")
+                {
+                    list = list.OrderBy2(filterModel.SortActive);
+
+                }
+                else
+                {
+                    list = list.OrderByDescending2(filterModel.SortActive);
+
+                }
+            }
+            return list;
+        }
+
+        public static IOrderedQueryable<T> OrderBy2<T>(this IQueryable<T> source, string propertyName)
+        {
+            return source.OrderBy(toLambda<T>(propertyName));
+        }
+
+        public static IOrderedQueryable<T> OrderByDescending2<T>(this IQueryable<T> source, string propertyName)
+        {
+            return source.OrderByDescending(toLambda<T>(propertyName));
+        }
+
+        private static Expression<Func<T, object>> toLambda<T>(string propertyName)
+        {
+            var parameter = Expression.Parameter(typeof(T));
+            var property = Expression.Property(parameter, propertyName);
+            var propertyAsObject = Expression.Convert(property, typeof(object));
+            return Expression.Lambda<Func<T, object>>(propertyAsObject, parameter);
         }
 
     }

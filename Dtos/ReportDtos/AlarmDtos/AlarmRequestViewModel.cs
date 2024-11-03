@@ -4,7 +4,7 @@ using FMSD_BE.Helper;
 namespace FMSD_BE.Dtos.ReportDtos.AlarmDtos
 {
     [DateRange("StartDate", "EndDate", ErrorMessage = "StartDate must be less than or equal to EndDate.")]
-    public class AlarmRequesViewModel : GeneralFilterModel
+    public class AlarmRequestViewModel : GeneralFilterModel
     {
         public DateTime? StartDate { get; set; } 
         public DateTime? EndDate { get; set; } 
