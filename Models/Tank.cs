@@ -60,4 +60,6 @@ public partial class Tank
     public virtual TankStatus? TankStatus { get; set; }
 
     public virtual ICollection<TransactionDetail> TransactionDetails { get; set; } = new List<TransactionDetail>();
+
+
 }

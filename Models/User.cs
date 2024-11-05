@@ -36,4 +36,5 @@ public partial class User
     public virtual ICollection<RfidCard> RfidCards { get; set; } = new List<RfidCard>();
 
     public virtual Role? Role { get; set; }
+
 }

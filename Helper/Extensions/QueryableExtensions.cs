@@ -2,6 +2,8 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Linq.Dynamic.Core;
+using FMSD_BE.Dtos.ReportDtos.DistributionTransactionDtos;
+using FMSD_BE.Models;
 
 namespace FMSD_BE.Helper.Extensions
 {
@@ -136,6 +138,8 @@ namespace FMSD_BE.Helper.Extensions
             var propertyAsObject = Expression.Convert(property, typeof(object));
             return Expression.Lambda<Func<T, object>>(propertyAsObject, parameter);
         }
+
+       
 
     }
 }
