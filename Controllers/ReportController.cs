@@ -18,15 +18,14 @@ namespace FMSD_BE.Controllers
     public class ReportController : ControllerBase
     {
         private readonly IAlarmService _alarmService;
-
         private readonly ITankService _tankService;
         private readonly ISharedService _sharedService;
         private readonly IDistributionTransactionService _distributionTransactionService;
+        private readonly ILeakageService _leakageService;
 
         public ReportController(IAlarmService alarmService , ITankService tankService,
             ISharedService sharedService , IDistributionTransactionService distributionTransactionService)
 
-        private readonly ILeakageService _leakageService;
         public ReportController(IAlarmService alarmService , ITankService tankService, ISharedService sharedService,
            ILeakageService leakageService)
         {
@@ -109,31 +108,6 @@ namespace FMSD_BE.Controllers
 
             return File(fileResult.Bytes, fileResult.ContentType, fileResult.FileName);
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         [HttpPost("GetLeakages")]
         public async Task<ActionResult> GetLeakages(LeakageRequestViewModel input)

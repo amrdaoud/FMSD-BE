@@ -20,10 +20,6 @@ builder.Services.AddScoped<IAlarmService, AlarmService>();
 builder.Services.AddScoped<ITankService, TankService>();
 builder.Services.AddScoped<ISharedService, SharedService>();
 builder.Services.AddScoped<IDistributionTransactionService, DistributionTransactionService>();
-
-
-
-
 builder.Services.AddScoped<ILeakageService, LeakageService>();
 
 builder.Services.AddCors(o => o.AddPolicy("CorsPolicy", builder =>
