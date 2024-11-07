@@ -38,4 +38,5 @@ public partial class Pump
     public virtual ICollection<PumpTank> PumpTanks { get; set; } = new List<PumpTank>();
 
     public virtual ICollection<RfidDevice> RfidDevices { get; set; } = new List<RfidDevice>();
+
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FMSD_BE.Models;
 
@@ -17,6 +18,7 @@ public partial class FuelTransaction
 
     public long? TransactionStatusId { get; set; }
 
+
     public string? DispensedTankGuid { get; set; }
 
     public string? DriverName { get; set; }
@@ -27,7 +29,9 @@ public partial class FuelTransaction
 
     public string? AccompanyingName { get; set; }
 
+
     public Guid? PumpGuid { get; set; }
+
 
     public Guid? TankGuid { get; set; }
 
@@ -58,6 +62,8 @@ public partial class FuelTransaction
     public Guid StationGuid { get; set; }
 
     public virtual OperationType OperationType { get; set; } = null!;
-
     public virtual TransactionStatus? TransactionStatus { get; set; }
+
+
+
 }
