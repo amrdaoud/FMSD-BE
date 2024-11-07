@@ -40,4 +40,6 @@ public partial class Station
     public virtual ICollection<SystemConfig> SystemConfigs { get; set; } = new List<SystemConfig>();
 
     public virtual ICollection<Tank> Tanks { get; set; } = new List<Tank>();
+    public virtual ICollection<FuelTransaction> FuelTransactions { get; set; } = new List<FuelTransaction>();
+
 }
