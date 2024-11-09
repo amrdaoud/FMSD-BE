@@ -1,9 +1,11 @@
 ﻿using FMSD_BE.Dtos.ReportDtos.AlarmDtos;
 using FMSD_BE.Dtos.ReportDtos.DistributionTransactionDtos;
 using FMSD_BE.Dtos.ReportDtos.TankDtos;
+using FMSD_BE.Dtos.ReportDtos.TransactionDetailDtos;
 using FMSD_BE.Services.ReportService.AlarmService;
 using FMSD_BE.Services.ReportService.DistributionTransactionService;
 using FMSD_BE.Services.ReportService.TankService;
+using FMSD_BE.Services.ReportService.TransactionDetailService;
 using FMSD_BE.Services.SharedService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,14 +22,16 @@ namespace FMSD_BE.Controllers
         private readonly ITankService _tankService;
         private readonly ISharedService _sharedService;
         private readonly IDistributionTransactionService _distributionTransactionService;
-
+        private readonly ITransactionDetailService _transactionDetailService;
         public ReportController(IAlarmService alarmService , ITankService tankService,
-            ISharedService sharedService , IDistributionTransactionService distributionTransactionService)
+            ISharedService sharedService , IDistributionTransactionService distributionTransactionService,
+            ITransactionDetailService transactionDetailService)
         {
             _alarmService = alarmService;
             _tankService = tankService;
             _sharedService = sharedService;
             _distributionTransactionService = distributionTransactionService;
+            _transactionDetailService = transactionDetailService;
         }
 
         [HttpPost("GetAlarms")]
@@ -101,5 +105,33 @@ namespace FMSD_BE.Controllers
 
             return File(fileResult.Bytes, fileResult.ContentType, fileResult.FileName);
         }
+
+
+        [HttpPost("GetTransactionDetails")]
+        public async Task<ActionResult> GetTransactionDetails(TransactionDetailRequestViewModel input)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var response = await _transactionDetailService.GetTransactionDetails(input);
+            return Ok(response);
+        }
+
+        [HttpPost("ExportTransactionDetails")]
+        public IActionResult ExportTransactionDetails(TransactionDetailRequestViewModel input)
+        {
+            var result = _transactionDetailService.ExportTransactionDetails(input);
+
+            var fileResult = _sharedService.ExportDynamicDataToExcel(result, "DistributionTransactions");
+
+            if (fileResult.Bytes == null || fileResult.Bytes.Count() == 0)
+                return BadRequest(new { message = "No Data To Export." });
+
+            return File(fileResult.Bytes, fileResult.ContentType, fileResult.FileName);
+        }
+
+
+
     }
 }
