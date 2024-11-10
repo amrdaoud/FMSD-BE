@@ -1,4 +1,5 @@
-﻿using FMSD_BE.Services.DashboardService;
+﻿using FMSD_BE.Dtos.DashboardDtos;
+using FMSD_BE.Services.DashboardService;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FMSD_BE.Controllers
@@ -34,7 +35,18 @@ namespace FMSD_BE.Controllers
 		[HttpGet("TankReport")]
 		public async Task<IActionResult> TankReport(string? name, bool tcv)
 		{
-			var result = await _dashboardService.GetTankReport(name, tcv);
+			var result = await _dashboardService.GetTankReportAsync(name, tcv);
+
+			if (!string.IsNullOrEmpty(result.Message))
+				return BadRequest(new { message = result.Message });
+
+			return Ok(result.Data);
+		}
+
+		[HttpPost("TanksDailyFuelLevel")]
+		public async Task<IActionResult> DailyFuelLevel(DailyFuelLevelRequest request)
+		{
+			var result = await _dashboardService.TanksDailyFuelLevelAsync(request);
 
 			if (!string.IsNullOrEmpty(result.Message))
 				return BadRequest(new { message = result.Message });
