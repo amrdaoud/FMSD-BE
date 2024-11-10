@@ -1,6 +1,7 @@
 using FMSD_BE.Data;
 using FMSD_BE.Services.DashboardService;
 using FMSD_BE.Services.ReportService.AlarmService;
+using FMSD_BE.Services.ReportService.CalibrationService;
 using FMSD_BE.Services.ReportService.DistributionTransactionService;
 using FMSD_BE.Services.ReportService.LeakageSrvice;
 using FMSD_BE.Services.ReportService.TankService;
@@ -23,6 +24,7 @@ builder.Services.AddScoped<ISharedService, SharedService>();
 builder.Services.AddScoped<IDistributionTransactionService, DistributionTransactionService>();
 builder.Services.AddScoped<ITransactionDetailService, TransactionDetailService>();
 builder.Services.AddScoped<ILeakageService, LeakageService>();
+builder.Services.AddScoped<ICalibrationService, CalibrationService>();
 
 builder.Services.AddCors(o => o.AddPolicy("CorsPolicy", builder =>
 {
