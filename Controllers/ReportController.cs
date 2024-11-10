@@ -26,13 +26,10 @@ namespace FMSD_BE.Controllers
         private readonly ITransactionDetailService _transactionDetailService;
         private readonly ILeakageService _leakageService;
 
-        public ReportController(IAlarmService alarmService , ITankService tankService,
-            ISharedService sharedService , IDistributionTransactionService distributionTransactionService,
+        public ReportController(IAlarmService alarmService , ITankService tankService, 
+            ISharedService sharedService,
+           ILeakageService leakageService, IDistributionTransactionService distributionTransactionService,
             ITransactionDetailService transactionDetailService)
-            ISharedService sharedService , IDistributionTransactionService distributionTransactionService)
-
-        public ReportController(IAlarmService alarmService , ITankService tankService, ISharedService sharedService,
-           ILeakageService leakageService)
         {
             _alarmService = alarmService;
             _tankService = tankService;
@@ -139,8 +136,6 @@ namespace FMSD_BE.Controllers
 
             return File(fileResult.Bytes, fileResult.ContentType, fileResult.FileName);
         }
-
-
 
 
         [HttpPost("GetLeakages")]
