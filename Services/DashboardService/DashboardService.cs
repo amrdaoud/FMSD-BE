@@ -288,7 +288,7 @@ namespace FMSD_BE.Services.DashboardService
 			if (request.StartDate != null && request.EndDate != null)
 			{
 				request.StartDate = Utilites.convertDateToArabStandardDate((DateTime)request.StartDate);
-				request.EndDate = Utilites.convertDateToArabStandardDate((DateTime)request.EndDate);
+				request.EndDate = Utilites.convertDateToArabStandardDate((DateTime)request.EndDate).AddDays(1).AddSeconds(-1);
 			}
 
 			var maxMeasures = _db.TankMeasurements
@@ -298,7 +298,7 @@ namespace FMSD_BE.Services.DashboardService
 					Day = g.CreatedAt.Value.Date,
 					g.TankGuid
 				})
-				.Select(e => e.Max(i => i.Id));
+				.Select(e => e.Key.Day == request.StartDate.Date ?  e.Min(i => i.Id) : e.Max(i => i.Id));
 
 			var tanksPerDay = _db.TankMeasurements
 				.Where(e => maxMeasures.Contains(e.Id))
@@ -321,8 +321,8 @@ namespace FMSD_BE.Services.DashboardService
 					[
 						new DataSetModel
 						{
-							Data = tanksPerDay.Select(e=>e.fuelLevel).ToList(),
-							Label = "Fuel Level",
+							Data = tanksPerDay.Select(e=>e.fuelVolume).ToList(),
+							Label = "Fuel Volume",
 							BackgroundColor= ["#00cccc33"],
 							BorderColor =["#00cccc"],
 							Fill = "start",
@@ -338,10 +338,10 @@ namespace FMSD_BE.Services.DashboardService
 				IsUp = result.Datasets[0].Data.LastOrDefault() - result.Datasets[0].Data.FirstOrDefault() > 0 ? true : false,
 				BoldValueTitle = "Available Rate",
 				//BoldValue = "FuelAll / AllCapacity * 100 for request last date",
-				BoldValue = Math.Round(((tanksPerDay.Select(e => e.fuelLevel).LastOrDefault() / tanksPerDay.Select(e => e.capacity).LastOrDefault()) * 100)).ToString() + "%",
+				BoldValue = Math.Round(((tanksPerDay.Select(e => e.fuelVolume).LastOrDefault() / tanksPerDay.Select(e => e.capacity).LastOrDefault()) * 100)).ToString() + "%",
 
 				//LightValue = "Math.ABS" + "FuelAll / AllCapacity * 100 for request last date - FuelAll / AllCapacity * 100 for request First date"
-				LightValue = Math.Abs(Math.Round(((tanksPerDay.Select(e => e.fuelLevel).LastOrDefault() / tanksPerDay.Select(e => e.capacity).LastOrDefault()) * 100) - ((tanksPerDay.Select(e => e.fuelLevel).FirstOrDefault() / tanksPerDay.Select(e => e.capacity).FirstOrDefault()) * 100))).ToString() + "%"
+				LightValue = Math.Abs(Math.Round(((tanksPerDay.Select(e => e.fuelVolume).LastOrDefault() / tanksPerDay.Select(e => e.capacity).LastOrDefault()) * 100) - ((tanksPerDay.Select(e => e.fuelVolume).FirstOrDefault() / tanksPerDay.Select(e => e.capacity).FirstOrDefault()) * 100))).ToString() + "%"
 			};
 
 			return new ResultWithMessage(result, string.Empty);
