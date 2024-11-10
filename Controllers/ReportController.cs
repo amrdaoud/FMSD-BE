@@ -1,9 +1,11 @@
 ﻿using FMSD_BE.Dtos.ReportDtos.AlarmDtos;
+using FMSD_BE.Dtos.ReportDtos.CalibrationDtos;
 using FMSD_BE.Dtos.ReportDtos.DistributionTransactionDtos;
 using FMSD_BE.Dtos.ReportDtos.LeakageDtos;
 using FMSD_BE.Dtos.ReportDtos.TankDtos;
 using FMSD_BE.Dtos.ReportDtos.TransactionDetailDtos;
 using FMSD_BE.Services.ReportService.AlarmService;
+using FMSD_BE.Services.ReportService.CalibrationService;
 using FMSD_BE.Services.ReportService.DistributionTransactionService;
 using FMSD_BE.Services.ReportService.LeakageSrvice;
 using FMSD_BE.Services.ReportService.TankService;
@@ -25,19 +27,20 @@ namespace FMSD_BE.Controllers
         private readonly IDistributionTransactionService _distributionTransactionService;
         private readonly ITransactionDetailService _transactionDetailService;
         private readonly ILeakageService _leakageService;
-
+        private readonly ICalibrationService _calibrationService;
         public ReportController(IAlarmService alarmService , ITankService tankService, 
             ISharedService sharedService,
            ILeakageService leakageService, IDistributionTransactionService distributionTransactionService,
-            ITransactionDetailService transactionDetailService)
+            ITransactionDetailService transactionDetailService,
+            ICalibrationService calibrationService)
         {
             _alarmService = alarmService;
             _tankService = tankService;
             _sharedService = sharedService;
             _distributionTransactionService = distributionTransactionService;
-            _transactionDetailService = transactionDetailService;
-            
+            _transactionDetailService = transactionDetailService;      
             _leakageService = leakageService;
+            _calibrationService = calibrationService;
         }
 
         [HttpPost("GetAlarms")]
@@ -155,6 +158,32 @@ namespace FMSD_BE.Controllers
             var result = _leakageService.ExportLeakages(input);
 
             var fileResult = _sharedService.ExportDynamicDataToExcel(result, "Leakages");
+
+            if (fileResult.Bytes == null || fileResult.Bytes.Count() == 0)
+                return BadRequest(new { message = "No Data To Export." });
+
+            return File(fileResult.Bytes, fileResult.ContentType, fileResult.FileName);
+        }
+
+
+        [HttpPost("GetCalibrations")]
+        public async Task<ActionResult> GetCalibrations(CalibrationRequestViewModel input)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var response = await _calibrationService.GetCalibrations(input);
+            return Ok(response);
+        }
+
+
+        [HttpPost("ExportCalibrations")]
+        public IActionResult ExportCalibrations(CalibrationRequestViewModel input)
+        {
+            var result = _calibrationService.ExportCalibrations(input);
+
+            var fileResult = _sharedService.ExportDynamicDataToExcel(result, "Calibrations");
 
             if (fileResult.Bytes == null || fileResult.Bytes.Count() == 0)
                 return BadRequest(new { message = "No Data To Export." });
