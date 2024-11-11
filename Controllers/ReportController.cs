@@ -1,10 +1,12 @@
 ﻿using FMSD_BE.Dtos.ReportDtos.AlarmDtos;
+using FMSD_BE.Dtos.ReportDtos.CalibrationDetailDtos;
 using FMSD_BE.Dtos.ReportDtos.CalibrationDtos;
 using FMSD_BE.Dtos.ReportDtos.DistributionTransactionDtos;
 using FMSD_BE.Dtos.ReportDtos.LeakageDtos;
 using FMSD_BE.Dtos.ReportDtos.TankDtos;
 using FMSD_BE.Dtos.ReportDtos.TransactionDetailDtos;
 using FMSD_BE.Services.ReportService.AlarmService;
+using FMSD_BE.Services.ReportService.CalibrationDetailService;
 using FMSD_BE.Services.ReportService.CalibrationService;
 using FMSD_BE.Services.ReportService.DistributionTransactionService;
 using FMSD_BE.Services.ReportService.LeakageSrvice;
@@ -28,11 +30,14 @@ namespace FMSD_BE.Controllers
         private readonly ITransactionDetailService _transactionDetailService;
         private readonly ILeakageService _leakageService;
         private readonly ICalibrationService _calibrationService;
+        private readonly ICalibrationDetailService _calibrationDetailService;
+
         public ReportController(IAlarmService alarmService , ITankService tankService, 
             ISharedService sharedService,
            ILeakageService leakageService, IDistributionTransactionService distributionTransactionService,
             ITransactionDetailService transactionDetailService,
-            ICalibrationService calibrationService)
+            ICalibrationService calibrationService ,
+            ICalibrationDetailService calibrationDetailService)
         {
             _alarmService = alarmService;
             _tankService = tankService;
@@ -41,6 +46,7 @@ namespace FMSD_BE.Controllers
             _transactionDetailService = transactionDetailService;      
             _leakageService = leakageService;
             _calibrationService = calibrationService;
+            _calibrationDetailService = calibrationDetailService;
         }
 
         [HttpPost("GetAlarms")]
@@ -190,6 +196,33 @@ namespace FMSD_BE.Controllers
 
             return File(fileResult.Bytes, fileResult.ContentType, fileResult.FileName);
         }
+
+
+        [HttpPost("GetCalibrationDetails")]
+        public async Task<ActionResult> GetCalibrationDetails(CalibrationDetailRequest input)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var response = await _calibrationDetailService.GetCalibrationDetails(input);
+            return Ok(response);
+        }
+
+
+        [HttpPost("ExportCalibrationDetails")]
+        public IActionResult ExportCalibrations(CalibrationDetailRequest input)
+        {
+            var result = _calibrationDetailService.ExportCalibrationDetails(input);
+
+            var fileResult = _sharedService.ExportDynamicDataToExcel(result, "Calibration-Details");
+
+            if (fileResult.Bytes == null || fileResult.Bytes.Count() == 0)
+                return BadRequest(new { message = "No Data To Export." });
+
+            return File(fileResult.Bytes, fileResult.ContentType, fileResult.FileName);
+        }
+
 
     }
 }
