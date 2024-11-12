@@ -64,6 +64,8 @@ public partial class FuelTransaction
     public virtual OperationType OperationType { get; set; } = null!;
     public virtual TransactionStatus? TransactionStatus { get; set; }
 
+    public virtual ICollection<TransactionDetail> TransactionDetails { get; set; }
+
 
 
 }

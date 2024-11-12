@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FMSD_BE.Models;
 
@@ -7,6 +8,7 @@ public partial class TransactionDetail
 {
     public long Id { get; set; }
 
+    [ForeignKey("FuelTransaction")]
     public long? FuelTransactionId { get; set; }
 
     public Guid? TankGuid { get; set; }
@@ -30,4 +32,6 @@ public partial class TransactionDetail
     public Guid StationGuid { get; set; }
 
     public virtual Tank? Tank { get; set; }
+
+    public virtual FuelTransaction FuelTransaction { get; set; }
 }
