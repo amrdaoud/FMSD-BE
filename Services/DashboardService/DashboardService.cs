@@ -298,9 +298,9 @@ namespace FMSD_BE.Services.DashboardService
 					Day = g.CreatedAt.Value.Date,
 					g.TankGuid
 				})
-				.Select(e => e.Key.Day == request.StartDate.Date ?  e.Min(i => i.Id) : e.Max(i => i.Id));
+				.Select(e => e.Key.Day == request.StartDate.Date ? e.Min(i => i.Id) : e.Max(i => i.Id));
 
-			var tanksPerDay = _db.TankMeasurements
+			var tanksPerDay = await _db.TankMeasurements
 				.Where(e => maxMeasures.Contains(e.Id))
 				.GroupBy(g => g.CreatedAt.Value.Date)
 				.Select(e => new
@@ -312,7 +312,7 @@ namespace FMSD_BE.Services.DashboardService
 					//backgroundColor = e.Sum(f => f.FuelVolume) / e.Sum(t => t.Tank.Capacity) <= 0.2 ? "rgba(255, 99, 132, 0.2)" : e.Sum(f => f.FuelVolume) / e.Sum(t => t.Tank.Capacity) <= 0.5 ? "rgba(255, 159, 64, 0.2)" : "rgba(75, 192, 192, 0.2)"
 				})
 				.OrderBy(e => e.Date)
-				.ToList();
+				.ToListAsync();
 
 
 			var result = new ChartApiResponse
@@ -348,7 +348,11 @@ namespace FMSD_BE.Services.DashboardService
 		}
 		public async Task<ResultWithMessage> GetAllCitiesAsync()
 		{
-			var result =await  _db.Stations.Select(e => e.City).Distinct().ToListAsync();
+			var result = await _db.Stations
+				.Select(e => e.City)
+				.Distinct()
+				.OrderBy(city => city)
+				.ToListAsync();
 
 			return new ResultWithMessage(result, string.Empty);
 		}
@@ -379,6 +383,16 @@ namespace FMSD_BE.Services.DashboardService
 			return new ResultWithMessage(stations, string.Empty);
 
 
+		}
+		public async Task<ResultWithMessage> GetAllAlarmTypesAsync()
+		{
+			var result = await _db.Alarms
+				.Select(e => e.Type)
+				.Distinct()
+				.OrderBy(alarmType => alarmType)
+				.ToListAsync();
+
+			return new ResultWithMessage(result, string.Empty);
 		}
 	}
 }

@@ -70,5 +70,14 @@ namespace FMSD_BE.Controllers
 
 			return Ok(result.Data);
 		}
+
+
+		[HttpGet("GetAllAlarmTypes")]
+		public async Task<IActionResult> GetAllAlarmTypes()
+		{
+			var result = await _dashboardService.GetAllAlarmTypesAsync();
+
+			return Ok(result.Data);
+		}
 	}
 }
