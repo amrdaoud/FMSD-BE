@@ -352,5 +352,33 @@ namespace FMSD_BE.Services.DashboardService
 
 			return new ResultWithMessage(result, string.Empty);
 		}
+		public async Task<ResultWithMessage> GetAllStationsAsync(string? name)
+		{
+			var query = _db.Stations.Where(e => e.DeletedAt == null && !string.IsNullOrEmpty(e.StationType));
+
+			if (!string.IsNullOrEmpty(name))
+				query = query.Where(e => e.City.Trim().ToLower().Contains(name.Trim().ToLower()));
+
+			var stations = await query
+				.Select(e => new StationListViewModel
+				{
+					Guid = e.Guid,
+					Id = e.Id,
+					City = e.City,
+					CreatedAt = e.CreatedAt,
+					DeletedAt = e.DeletedAt,
+					PumpNumber = e.PumpNumber,
+					StationName = e.StationName,
+					StationType = e.StationType,
+					TankNumber = e.TankNumber,
+					UpdatedAt = e.UpdatedAt
+				})
+				.OrderBy(e => e.StationName)
+				.ToListAsync();
+
+			return new ResultWithMessage(stations, string.Empty);
+
+
+		}
 	}
 }

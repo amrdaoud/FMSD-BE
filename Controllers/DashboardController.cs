@@ -61,5 +61,14 @@ namespace FMSD_BE.Controllers
 
 			return Ok(result.Data);
 		}
+
+
+		[HttpGet("GetStation")]
+		public async Task<IActionResult> GetStation(string? name)
+		{
+			var result = await _dashboardService.GetAllStationsAsync(name);
+
+			return Ok(result.Data);
+		}
 	}
 }
