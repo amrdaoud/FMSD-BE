@@ -138,7 +138,7 @@ namespace FMSD_BE.Controllers
         {
             var result = _transactionDetailService.ExportTransactionDetails(input);
 
-            var fileResult = _sharedService.ExportDynamicDataToExcel(result, "DistributionTransactions");
+            var fileResult = _sharedService.ExportDynamicDataToExcel(result, "TransactionsDetails");
 
             if (fileResult.Bytes == null || fileResult.Bytes.Count() == 0)
                 return BadRequest(new { message = "No Data To Export." });

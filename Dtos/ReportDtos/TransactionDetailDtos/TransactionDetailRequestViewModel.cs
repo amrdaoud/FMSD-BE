@@ -14,9 +14,8 @@ namespace FMSD_BE.Dtos.ReportDtos.TransactionDetailDtos
         public DateTime? EndDate { get; set; }
         public List<string>? Cities { get; set; }
         public List<Guid>? stationGuids { get; set; }
-        public string? TimeGroup { get; set; } = string.Empty;
-        [DefaultValue("Tank")]
-        public string? GroupBy { get; set; }
         public List<Guid?>? TankGuids { get; set; }
+        public List<long>? OperationTypeIds { get; set; } // filling ,  distribution ..etc
+
     }
 }

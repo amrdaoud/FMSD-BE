@@ -2,7 +2,7 @@
 {
     public class TransactionDetailListViewModel
     {
-        public string GroupingName { get; set; }
+        public string TankName { get; set; }
         public double? FuelVolumeBefore { get; set; }
         public double? FuelVolumeAfter { get; set; }
         public double? TcvBefore { get; set; }
