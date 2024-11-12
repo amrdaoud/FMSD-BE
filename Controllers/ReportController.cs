@@ -26,7 +26,7 @@ namespace FMSD_BE.Controllers
         private readonly IAlarmService _alarmService;
         private readonly ITankService _tankService;
         private readonly ISharedService _sharedService;
-        private readonly IDistributionTransactionService _distributionTransactionService;
+        private readonly IFuelTransactionService _fuelTransactionService;
         private readonly ITransactionDetailService _transactionDetailService;
         private readonly ILeakageService _leakageService;
         private readonly ICalibrationService _calibrationService;
@@ -34,7 +34,7 @@ namespace FMSD_BE.Controllers
 
         public ReportController(IAlarmService alarmService , ITankService tankService, 
             ISharedService sharedService,
-           ILeakageService leakageService, IDistributionTransactionService distributionTransactionService,
+           ILeakageService leakageService, IFuelTransactionService fuelTransactionService,
             ITransactionDetailService transactionDetailService,
             ICalibrationService calibrationService ,
             ICalibrationDetailService calibrationDetailService)
@@ -42,7 +42,7 @@ namespace FMSD_BE.Controllers
             _alarmService = alarmService;
             _tankService = tankService;
             _sharedService = sharedService;
-            _distributionTransactionService = distributionTransactionService;
+            _fuelTransactionService = fuelTransactionService;
             _transactionDetailService = transactionDetailService;      
             _leakageService = leakageService;
             _calibrationService = calibrationService;
@@ -97,21 +97,21 @@ namespace FMSD_BE.Controllers
             return File(fileResult.Bytes, fileResult.ContentType, fileResult.FileName);
         }
 
-        [HttpPost("GetDistributionTransactions")]
-        public async Task<ActionResult> GetDistributionTransactions(DistributionTransactionRequestViewModel input)
+        [HttpPost("GetFuelTransactions")]
+        public async Task<ActionResult> GetDistributionTransactions(FuelTransactionRequestViewModel input)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var response = await _distributionTransactionService.GetDistributionTransactions(input);
+            var response = await _fuelTransactionService.GetFuelTransactions(input);
             return Ok(response);
         }
 
-        [HttpPost("ExportDistributionTransactions")]
-        public IActionResult ExportDistributionTransactions(DistributionTransactionRequestViewModel input)
+        [HttpPost("ExportFuelTransactions")]
+        public IActionResult ExportDistributionTransactions(FuelTransactionRequestViewModel input)
         {
-            var result = _distributionTransactionService.ExportDistributionTransactions(input);
+            var result = _fuelTransactionService.ExportFuelTransactions(input);
 
             var fileResult = _sharedService.ExportDynamicDataToExcel(result, "DistributionTransactions");
 

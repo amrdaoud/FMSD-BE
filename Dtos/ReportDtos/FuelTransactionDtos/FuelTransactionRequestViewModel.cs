@@ -7,7 +7,7 @@ namespace FMSD_BE.Dtos.ReportDtos.DistributionTransactionDtos
 {
     [DateRange("StartDate", "EndDate", ErrorMessage = "StartDate must be less than or equal to EndDate.")]
     [GroupKey("GroupBy", "TimeGroup")]
-    public class DistributionTransactionRequestViewModel : GeneralFilterModel
+    public class FuelTransactionRequestViewModel : GeneralFilterModel
     {
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
@@ -18,7 +18,7 @@ namespace FMSD_BE.Dtos.ReportDtos.DistributionTransactionDtos
         public string? GroupBy { get; set; }
         public List<string>? TankGuids { get; set; }
         public List<long>? StatusIds { get; set; }
-
+        public List<long>? OperationTypeIds { get; set; } // filling ,  distribution ..etc
 
     }
 }

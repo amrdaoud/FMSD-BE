@@ -22,7 +22,7 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IAlarmService, AlarmService>();
 builder.Services.AddScoped<ITankService, TankService>();
 builder.Services.AddScoped<ISharedService, SharedService>();
-builder.Services.AddScoped<IDistributionTransactionService, DistributionTransactionService>();
+builder.Services.AddScoped<IFuelTransactionService, FuelTransactionService>();
 builder.Services.AddScoped<ITransactionDetailService, TransactionDetailService>();
 builder.Services.AddScoped<ILeakageService, LeakageService>();
 builder.Services.AddScoped<ICalibrationService, CalibrationService>();
