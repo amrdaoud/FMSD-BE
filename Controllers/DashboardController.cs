@@ -79,5 +79,16 @@ namespace FMSD_BE.Controllers
 
 			return Ok(result.Data);
 		}
+
+
+		[HttpGet("GetTransactionStatuses")]
+		public async Task<IActionResult> GetTransactionStatuses()
+		{
+			var result = await _dashboardService.GetTransactionStatusesAsync();
+
+			return Ok(result.Data);
+		}
+
+
 	}
 }
