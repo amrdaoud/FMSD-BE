@@ -53,5 +53,13 @@ namespace FMSD_BE.Controllers
 
 			return Ok(result.Data);
 		}
+
+		[HttpGet("GetAllCities")]
+		public async Task<IActionResult> GetAllCities()
+		{
+			var result = await _dashboardService.GetAllCitiesAsync();
+
+			return Ok(result.Data);
+		}
 	}
 }

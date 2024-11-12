@@ -346,5 +346,11 @@ namespace FMSD_BE.Services.DashboardService
 
 			return new ResultWithMessage(result, string.Empty);
 		}
+		public async Task<ResultWithMessage> GetAllCitiesAsync()
+		{
+			var result =await  _db.Stations.Select(e => e.City).Distinct().ToListAsync();
+
+			return new ResultWithMessage(result, string.Empty);
+		}
 	}
 }
