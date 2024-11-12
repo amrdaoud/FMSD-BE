@@ -394,5 +394,15 @@ namespace FMSD_BE.Services.DashboardService
 
 			return new ResultWithMessage(result, string.Empty);
 		}
+		public async Task<ResultWithMessage> GetTransactionStatusesAsync()
+		{
+			var result = await _db.TransactionStatuses
+				.Select(e => e.TransStatus)
+				.Distinct()
+				.OrderBy(status => status)
+				.ToListAsync();
+
+			return new ResultWithMessage(result, string.Empty);
+		}
 	}
 }

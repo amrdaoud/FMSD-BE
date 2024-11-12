@@ -12,5 +12,6 @@ namespace FMSD_BE.Services.DashboardService
 		Task<ResultWithMessage> GetAllCitiesAsync();
 		Task<ResultWithMessage> GetAllStationsAsync(string? name);
 		Task<ResultWithMessage> GetAllAlarmTypesAsync();
+		Task<ResultWithMessage> GetTransactionStatusesAsync();
 	}
 }
