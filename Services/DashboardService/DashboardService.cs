@@ -2,6 +2,7 @@
 using FMSD_BE.Dtos.DashboardDtos;
 using FMSD_BE.Helper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace FMSD_BE.Services.DashboardService
 {
@@ -400,6 +401,53 @@ namespace FMSD_BE.Services.DashboardService
 				.Select(e => e.TransStatus)
 				.Distinct()
 				.OrderBy(status => status)
+				.ToListAsync();
+
+			return new ResultWithMessage(result, string.Empty);
+		}
+		public async Task<ResultWithMessage> GetAllTanksAsync(GetTanksRequest request)
+		{
+			var query = _db.Tanks
+				.Where(e => e.TankStatusId == 2 &&
+							e.Station.DeletedAt == null &&
+							!string.IsNullOrEmpty(e.Station.StationType));
+
+			if (!string.IsNullOrEmpty(request.CityName))
+				query = query.Where(e => e.Station.City.Contains(request.CityName.Trim().ToLower()));
+
+			if (!string.IsNullOrEmpty(request.StationGuid))
+				query = query.Where(e => e.Station.Guid.ToString().Contains(request.StationGuid.Trim().ToLower()));
+
+			var result = await query
+				.Select(e => new TankListViewModel
+				{
+					StationName = e.Station.StationName,
+					City = e.Station.City,
+					TankName = e.TankName,
+					Capacity = e.Capacity,
+					CreatedAt = e.CreatedAt,
+					Description = e.Description,
+					DLLimit = e.DLLimit,
+					Guid = e.Guid.ToString(),
+					Height = e.Height,
+					HighLimit = e.HighLimit,
+					HighHighLimit = e.HighHighLimit,
+					Hysteresis = e.Hysteresis,
+					Id = e.Id,
+					LogicalAddress = e.LogicalAddress,
+					LowLimit = e.LowLimit,
+					LowLowLimit = e.LowLowLimit,
+					MLLimit = e.MLLimit,
+					PhysicalAddress = e.PhysicalAddress,
+					StationGuid = e.StationGuid.ToString(),
+					TankStatus = e.TankStatus!.Name,
+					TankStatusId = e.TankStatusId,
+					UpdatedAt = e.UpdatedAt,
+					WaterHighLimit = e.WaterHighLimit,
+					WLLimit = e.MLLimit
+				})
+				.OrderBy(e => e.StationName)
+				.ThenBy(e => e.TankName)
 				.ToListAsync();
 
 			return new ResultWithMessage(result, string.Empty);

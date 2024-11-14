@@ -90,5 +90,12 @@ namespace FMSD_BE.Controllers
 		}
 
 
+		[HttpPost("GetAllTanks")]
+		public async Task<IActionResult> GetAllTanks(GetTanksRequest request)
+		{
+			var result = await _dashboardService.GetAllTanksAsync(request);
+
+			return Ok(result.Data);
+		}
 	}
 }
