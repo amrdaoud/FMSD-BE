@@ -1,4 +1,5 @@
-﻿using FMSD_BE.Data;
+﻿using Azure.Core;
+using FMSD_BE.Data;
 using FMSD_BE.Dtos.ReportDtos.AlarmDtos;
 using FMSD_BE.Dtos.SharedDto;
 using FMSD_BE.Helper;
@@ -26,14 +27,14 @@ namespace FMSD_BE.Services.ReportService.AlarmService
             if(input.StartDate != null && input.EndDate != null)
             {
                 input.StartDate = Utilites.convertDateToArabStandardDate((DateTime)input.StartDate);
-                input.EndDate = Utilites.convertDateToArabStandardDate((DateTime)input.EndDate);
-
+                input.EndDate = Utilites.convertDateToArabStandardDate((DateTime)input.EndDate).AddDays(1).AddSeconds(-1);
             }
 
             GeneralFilterModel  generalFilterModel = new GeneralFilterModel(input.SearchQuery,input.PageIndex,
                 input.PageSize,input.SortActive,input.SortDirection);
 
-            List<string> searchFields = new List<string>() { "AlarmCode" , "AlarmStatus.Status" , "User.Name" , "User.Username" };
+            List<string> searchFields = new List<string>() { "AlarmCode" , "AlarmStatus.Status" , "User.Name" , "User.Username" , "Description" };
+
             var query = _dbContext.Alarms.AsQueryable();
 
             query = query.ApplyFiltering(generalFilterModel, searchFields);
@@ -105,7 +106,7 @@ namespace FMSD_BE.Services.ReportService.AlarmService
         }
 
         private IQueryable<Alarm> ExtraFilter(IQueryable<Alarm> query, DateTime? start , DateTime? end ,
-            List<string> cities , List<Guid>? stationGuids , List<string> alarmTypes)
+            List<string> cities , List<Guid>? stationGuids , List<string>? alarmTypes)
         {
 
             if(start != null && end != null)
