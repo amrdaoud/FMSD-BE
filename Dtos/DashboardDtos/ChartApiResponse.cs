@@ -21,10 +21,16 @@ namespace FMSD_BE.Dtos.DashboardDtos
 	}
 	public class CardValue
 	{
-		public bool? IsUp { get; set; }
+		//public bool? IsUp { get; set; }
 		public string? BoldValue { get; set; }
 		public string? BoldValueTitle { get; set; }
 		public string? LightValue { get; set; }
 		public string? LightValueTitle { get; set; }
+		public Icon? Icon { get; set; }
+	}
+	public class Icon
+	{
+		public string Text { get; set; } = string.Empty;
+		public string? Color { get; set; }
 	}
 }
