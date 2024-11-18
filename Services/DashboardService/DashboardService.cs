@@ -1,6 +1,7 @@
 ﻿using FMSD_BE.Data;
 using FMSD_BE.Dtos.DashboardDtos;
 using FMSD_BE.Helper;
+using FMSD_BE.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -292,28 +293,120 @@ namespace FMSD_BE.Services.DashboardService
 				request.EndDate = Utilites.convertDateToArabStandardDate((DateTime)request.EndDate).AddDays(1).AddSeconds(-1);
 			}
 
-			var maxMeasures = _db.TankMeasurements
-				.Where(e => e.CreatedAt.HasValue && e.CreatedAt >= request.StartDate && e.CreatedAt <= request.EndDate)
-				.GroupBy(g => new
-				{
-					Day = g.CreatedAt.Value.Date,
-					g.TankGuid
-				})
-				.Select(e => e.Key.Day == request.StartDate.Date ? e.Min(i => i.Id) : e.Max(i => i.Id));
 
-			var tanksPerDay = await _db.TankMeasurements
-				.Where(e => maxMeasures.Contains(e.Id))
-				.GroupBy(g => g.CreatedAt.Value.Date)
-				.Select(e => new
-				{
-					Date = e.Key,
-					fuelLevel = e.Sum(f => f.FuelLevel),
-					fuelVolume = e.Sum(f => f.FuelVolume),
-					capacity = e.Sum(t => t.Tank.Capacity),
-					//backgroundColor = e.Sum(f => f.FuelVolume) / e.Sum(t => t.Tank.Capacity) <= 0.2 ? "rgba(255, 99, 132, 0.2)" : e.Sum(f => f.FuelVolume) / e.Sum(t => t.Tank.Capacity) <= 0.5 ? "rgba(255, 159, 64, 0.2)" : "rgba(75, 192, 192, 0.2)"
-				})
-				.OrderBy(e => e.Date)
+			////////////////////////////////////////////// Soultion1  //////////////////////////////////////////////
+
+			//var maxMeasures = _db.TankMeasurements
+			//	.Where(e => e.CreatedAt.HasValue && e.CreatedAt >= request.StartDate && e.CreatedAt <= request.EndDate)
+			//	.GroupBy(g => new
+			//	{
+			//		Day = g.CreatedAt.Value.Date,
+			//		g.TankGuid
+			//	})
+			//	.Select(e => e.Key.Day == request.StartDate.Date ? e.Min(i => i.Id) : e.Max(i => i.Id));
+
+			//var tanksPerDay = await _db.TankMeasurements
+			//	.Where(e => maxMeasures.Contains(e.Id))
+			//	.GroupBy(g => g.CreatedAt.Value.Date)
+			//	.Select(e => new
+			//	{
+			//		Date = e.Key,
+			//		fuelLevel = e.Sum(f => f.FuelLevel),
+			//		fuelVolume = e.Sum(f => f.FuelVolume),
+			//		capacity = e.Sum(t => t.Tank.Capacity),
+			//		//backgroundColor = e.Sum(f => f.FuelVolume) / e.Sum(t => t.Tank.Capacity) <= 0.2 ? "rgba(255, 99, 132, 0.2)" : e.Sum(f => f.FuelVolume) / e.Sum(t => t.Tank.Capacity) <= 0.5 ? "rgba(255, 159, 64, 0.2)" : "rgba(75, 192, 192, 0.2)"
+			//	})
+			//	.OrderBy(e => e.Date)
+			//	.ToListAsync();
+
+
+			//var result = new ChartApiResponse
+			//{
+			//	Datasets =
+			//		[
+			//			new DataSetModel
+			//			{
+			//				Data = tanksPerDay.Select(e=>e.fuelVolume).ToList(),
+			//				Label = "Fuel Volume",
+			//				BackgroundColor= ["#00cccc33"],
+			//				BorderColor =["#00cccc"],
+			//				Fill = "start",
+			//			}
+			//	],
+			//	Labels = tanksPerDay.Select(e => e.Date.ToString()).ToList(),
+
+			//	Values = [],
+			//};
+
+			//result.CardValue = new CardValue
+			//{
+			//	IsUp = result.Datasets[0].Data.LastOrDefault() - result.Datasets[0].Data.FirstOrDefault() > 0 ? true : false,
+			//	BoldValueTitle = "Available Rate",
+			//	//BoldValue = "FuelAll / AllCapacity * 100 for request last date",
+			//	BoldValue = Math.Round(((tanksPerDay.Select(e => e.fuelVolume).LastOrDefault() / tanksPerDay.Select(e => e.capacity).LastOrDefault()) * 100)).ToString() + "%",
+
+			//	//LightValue = "Math.ABS" + "FuelAll / AllCapacity * 100 for request last date - FuelAll / AllCapacity * 100 for request First date"
+			//	LightValue = Math.Abs(Math.Round(((tanksPerDay.Select(e => e.fuelVolume).LastOrDefault() / tanksPerDay.Select(e => e.capacity).LastOrDefault()) * 100) - ((tanksPerDay.Select(e => e.fuelVolume).FirstOrDefault() / tanksPerDay.Select(e => e.capacity).FirstOrDefault()) * 100))).ToString() + "%"
+			//};
+
+			////////////////////////////////////////////// Soultion2  //////////////////////////////////////////////
+
+
+			//1) get all tanks
+			var tankGuids = await _db.Tanks
+				.Where(e => e.TankStatusId == 2 && e.Station.DeletedAt == null && !string.IsNullOrEmpty(e.Station.StationType))
+				.Select(e => e.Guid)
+				.Distinct()
+				.OrderBy(tankGuid => tankGuid)
 				.ToListAsync();
+
+			//2) get date ranges
+			List<DateOnly> dateRanges = [];
+			for (DateTime date = request.StartDate; date <= request.EndDate; date = date.AddDays(1))
+				dateRanges.Add(DateOnly.FromDateTime(date));
+
+			//3) tanks Per Days
+			List<DailyFuelLevelResponse> tanksPerDays = [];
+
+			foreach (var date in dateRanges)
+			{
+				var tanksPerDay = new DailyFuelLevelResponse
+				{
+					Date = date,
+					FuelVolum = 0,
+					Capacity = 0
+				};
+
+				foreach (var tankGuid in tankGuids)
+				{
+
+					var res = _db.TankMeasurements
+						.Include(t => t.Tank)
+						.Where(e => e.TankGuid == tankGuid && DateOnly.FromDateTime((DateTime)e.CreatedAt) == date)
+						.OrderByDescending(e => e.CreatedAt)
+						.FirstOrDefault();
+
+					if (res is not null)
+					{
+						tanksPerDay.FuelVolum += res.FuelVolume;
+						tanksPerDay.Capacity += res.Tank.Capacity;
+					}
+					else
+					{
+
+						var lastMeasurement = _db.TankMeasurements
+						.Include(t => t.Tank)
+						.Where(e => e.TankGuid == tankGuid)
+						.OrderByDescending(e => e.CreatedAt)
+						.FirstOrDefault();
+
+						tanksPerDay.FuelVolum += lastMeasurement.FuelVolume;
+						tanksPerDay.Capacity += lastMeasurement.Tank.Capacity;
+					}
+				}
+
+				tanksPerDays.Add(tanksPerDay);
+			}
 
 
 			var result = new ChartApiResponse
@@ -322,27 +415,34 @@ namespace FMSD_BE.Services.DashboardService
 					[
 						new DataSetModel
 						{
-							Data = tanksPerDay.Select(e=>e.fuelVolume).ToList(),
+							Data = tanksPerDays.Select(e=>e.FuelVolum).ToList(),
 							Label = "Fuel Volume",
 							BackgroundColor= ["#00cccc33"],
 							BorderColor =["#00cccc"],
 							Fill = "start",
 						}
 				],
-				Labels = tanksPerDay.Select(e => e.Date.ToString()).ToList(),
+				Labels = tanksPerDays.Select(e => e.Date.ToString()).ToList(),
 
 				Values = [],
 			};
 
+			var isUp = result.Datasets[0].Data.LastOrDefault() - result.Datasets[0].Data.FirstOrDefault() > 0;
+
 			result.CardValue = new CardValue
 			{
-				IsUp = result.Datasets[0].Data.LastOrDefault() - result.Datasets[0].Data.FirstOrDefault() > 0 ? true : false,
+				Icon = new Icon
+				{
+					Text = isUp ? "trending_up" : "trending_down",
+					Color = isUp ? "#3BB001" : "#DC3545"
+				},
+
 				BoldValueTitle = "Available Rate",
 				//BoldValue = "FuelAll / AllCapacity * 100 for request last date",
-				BoldValue = Math.Round(((tanksPerDay.Select(e => e.fuelVolume).LastOrDefault() / tanksPerDay.Select(e => e.capacity).LastOrDefault()) * 100)).ToString() + "%",
+				BoldValue = Math.Round(((tanksPerDays.Select(e => e.FuelVolum).LastOrDefault() / tanksPerDays.Select(e => e.Capacity).LastOrDefault()) * 100)).ToString() + "%",
 
 				//LightValue = "Math.ABS" + "FuelAll / AllCapacity * 100 for request last date - FuelAll / AllCapacity * 100 for request First date"
-				LightValue = Math.Abs(Math.Round(((tanksPerDay.Select(e => e.fuelVolume).LastOrDefault() / tanksPerDay.Select(e => e.capacity).LastOrDefault()) * 100) - ((tanksPerDay.Select(e => e.fuelVolume).FirstOrDefault() / tanksPerDay.Select(e => e.capacity).FirstOrDefault()) * 100))).ToString() + "%"
+				LightValue = Math.Abs(Math.Round(((tanksPerDays.Select(e => e.FuelVolum).LastOrDefault() / tanksPerDays.Select(e => e.Capacity).LastOrDefault()) * 100) - ((tanksPerDays.Select(e => e.FuelVolum).FirstOrDefault() / tanksPerDays.Select(e => e.Capacity).FirstOrDefault()) * 100))).ToString() + "%"
 			};
 
 			return new ResultWithMessage(result, string.Empty);
