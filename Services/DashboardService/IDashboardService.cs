@@ -1,13 +1,12 @@
-﻿using FMSD_BE.Dtos.DashboardDtos;
-using FMSD_BE.Helper;
+﻿using FMSD_BE.Helper;
 
 namespace FMSD_BE.Services.DashboardService
 {
 	public interface IDashboardService
 	{
-		Task<ResultWithMessage> GetCityReportAsync(string? name, bool tcv);
-		Task<ResultWithMessage> GetStationReportAsync(string? name, bool tcv);
-		Task<ResultWithMessage> GetTankReportAsync(string? name, bool tcv);
-		Task<ResultWithMessage> TanksDailyFuelLevelAsync(DailyFuelLevelRequest request);
+		Task<ResultWithMessage> CityReportAsync(string? name, bool tcv);
+		Task<ResultWithMessage> StationReportAsync(string? name, bool tcv);
+		Task<ResultWithMessage> TankReportAsync(string? name, bool tcv);
+		Task<ResultWithMessage> TanksDailyFuelVolumeAsync(DateTime startDate, DateTime endDate);
 	}
 }

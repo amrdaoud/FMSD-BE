@@ -1,9 +1,7 @@
 ﻿using FMSD_BE.Data;
 using FMSD_BE.Dtos.DashboardDtos;
 using FMSD_BE.Helper;
-using FMSD_BE.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 
 namespace FMSD_BE.Services.DashboardService
 {
@@ -11,7 +9,7 @@ namespace FMSD_BE.Services.DashboardService
 	{
 		private readonly CentralizedFmsCloneContext _db = db;
 
-		public async Task<ResultWithMessage> GetCityReportAsync(string? name, bool tcv)
+		public async Task<ResultWithMessage> CityReportAsync(string? name, bool tcv)
 		{
 			var stations = _db.Stations.Where(station => station.DeletedAt == null && !string.IsNullOrEmpty(station.StationType));
 
@@ -86,12 +84,16 @@ namespace FMSD_BE.Services.DashboardService
 				Values =
 				[
 					new LookUpResponse {
-						Name = "Fill%",
-						Value = Math.Round (stationDetails.Select(e=>e.fuelVolume).Sum() / stationDetails.Select(e=>e.capacity).Sum()* 100).ToString() + "%"
+						//Name = "Fill%",
+						//Value = Math.Round (stationDetails.Select(e=>e.fuelVolume).Sum() / stationDetails.Select(e=>e.capacity).Sum()* 100).ToString() + "%"
+						Name = "Volume/L",
+						Value = Math.Round (stationDetails.Select(e=>e.fuelVolume).Sum() / 1000).ToString() + "K"
 					},
 					new LookUpResponse {
-						Name = "TCV Fill%",
-						Value = Math.Round (stationDetails.Select(e=>e.tcv).Sum() / stationDetails.Select(e=>e.capacity).Sum() * 100).ToString() + "%"
+						//Name = "TCV Fill%",
+						//Value = Math.Round (stationDetails.Select(e=>e.tcv).Sum() / stationDetails.Select(e=>e.capacity).Sum() * 100).ToString() + "%"
+						Name = "TCV Volume/L",
+						Value = Math.Round (stationDetails.Select(e=>e.tcv).Sum() / 1000).ToString() + "K"
 					},
 					new LookUpResponse {
 						Name = "Max Temperature",
@@ -106,7 +108,7 @@ namespace FMSD_BE.Services.DashboardService
 
 			return new ResultWithMessage(result, string.Empty);
 		}
-		public async Task<ResultWithMessage> GetStationReportAsync(string? name, bool tcv)
+		public async Task<ResultWithMessage> StationReportAsync(string? name, bool tcv)
 		{
 			var stations = _db.Stations.Where(station => station.DeletedAt == null && !string.IsNullOrEmpty(station.StationType));
 
@@ -181,12 +183,16 @@ namespace FMSD_BE.Services.DashboardService
 				Values =
 				[
 					new LookUpResponse {
-						Name = "Fill%",
-						Value = Math.Round (stationDetails.Select(e=>e.fuelVolume).Sum() / stationDetails.Select(e=>e.capacity).Sum()* 100).ToString() + "%"
+						//Name = "Fill%",
+						//Value = Math.Round (stationDetails.Select(e=>e.fuelVolume).Sum() / stationDetails.Select(e=>e.capacity).Sum()* 100).ToString() + "%"
+						Name = "Volume/L",
+						Value = Math.Round (stationDetails.Select(e=>e.fuelVolume).Sum() /1000).ToString() + "K"
 					},
 					new LookUpResponse {
-						Name = "TCV Fill%",
-						Value = Math.Round (stationDetails.Select(e=>e.tcv).Sum() / stationDetails.Select(e=>e.capacity).Sum() * 100).ToString() + "%"
+						//Name = "TCV Fill%",
+						//Value = Math.Round (stationDetails.Select(e=>e.tcv).Sum() / stationDetails.Select(e=>e.capacity).Sum() * 100).ToString() + "%"
+						Name = "TCV Volume/L",
+						Value = Math.Round (stationDetails.Select(e=>e.tcv).Sum() / 1000).ToString() + "K"
 					},
 					new LookUpResponse {
 						Name = "Max Temperature",
@@ -201,7 +207,7 @@ namespace FMSD_BE.Services.DashboardService
 
 			return new ResultWithMessage(result, string.Empty);
 		}
-		public async Task<ResultWithMessage> GetTankReportAsync(string? name, bool tcv)
+		public async Task<ResultWithMessage> TankReportAsync(string? name, bool tcv)
 		{
 			var query = _db.Tanks.Where(e => e.TankStatusId == 2 && e.Station.DeletedAt == null && !string.IsNullOrEmpty(e.Station.StationType));
 
@@ -265,12 +271,16 @@ namespace FMSD_BE.Services.DashboardService
 				Values =
 				[
 					new LookUpResponse {
-						Name = "Fill%",
-						Value = Math.Round (tankDetails.Select(e=>e.LastMeasurement.fuelVolume).Sum() / tankDetails.Select(e=>e.LastMeasurement.capacity).Sum() * 100).ToString() + "%"
+						//Name = "Fill%",
+						//Value = Math.Round (tankDetails.Select(e=>e.LastMeasurement.fuelVolume).Sum() / tankDetails.Select(e=>e.LastMeasurement.capacity).Sum() * 100).ToString() + "%"
+						Name = "Volume/L",
+						Value = Math.Round (tankDetails.Select(e=>e.LastMeasurement.fuelVolume).Sum() / 1000).ToString() + "K"
 					},
 					new LookUpResponse {
-						Name = "TCV Fill%",
-						Value = Math.Round (tankDetails.Select(e=>e.LastMeasurement.tcv).Sum()/ tankDetails.Select(e=>e.LastMeasurement.capacity).Sum() * 100).ToString() + "%"
+						//Name = "TCV Fill%",
+						//Value = Math.Round (tankDetails.Select(e=>e.LastMeasurement.tcv).Sum()/ tankDetails.Select(e=>e.LastMeasurement.capacity).Sum() * 100).ToString() + "%"
+						Name = "TCV Volume/L",
+						Value = Math.Round (tankDetails.Select(e=>e.LastMeasurement.tcv).Sum()/ 1000).ToString() + "K"
 					},
 					new LookUpResponse {
 						Name = "Max Temperature",
@@ -285,12 +295,12 @@ namespace FMSD_BE.Services.DashboardService
 
 			return new ResultWithMessage(result, string.Empty);
 		}
-		public async Task<ResultWithMessage> TanksDailyFuelLevelAsync(DailyFuelLevelRequest request)
+		public async Task<ResultWithMessage> TanksDailyFuelVolumeAsync(DateTime startDate, DateTime endDate)
 		{
-			if (request.StartDate != null && request.EndDate != null)
+			if (startDate != null && endDate != null)
 			{
-				request.StartDate = Utilites.convertDateToArabStandardDate((DateTime)request.StartDate);
-				request.EndDate = Utilites.convertDateToArabStandardDate((DateTime)request.EndDate).AddDays(1).AddSeconds(-1);
+				startDate = Utilites.convertDateToArabStandardDate((DateTime)startDate);
+				endDate = Utilites.convertDateToArabStandardDate((DateTime)endDate).AddDays(1).AddSeconds(-1);
 			}
 
 
@@ -362,18 +372,18 @@ namespace FMSD_BE.Services.DashboardService
 
 			//2) get date ranges
 			List<DateOnly> dateRanges = [];
-			for (DateTime date = request.StartDate; date <= request.EndDate; date = date.AddDays(1))
+			for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
 				dateRanges.Add(DateOnly.FromDateTime(date));
 
 			//3) tanks Per Days
-			List<DailyFuelLevel> tanksPerDays = [];
+			List<DailyFuelVolumeViewModel> tanksPerDays = [];
 
 			foreach (var date in dateRanges)
 			{
-				var tanksPerDay = new DailyFuelLevel
+				var tanksPerDay = new DailyFuelVolumeViewModel
 				{
 					Date = date,
-					FuelVolum = 0,
+					FuelVolume = 0,
 					Capacity = 0
 				};
 
@@ -388,7 +398,7 @@ namespace FMSD_BE.Services.DashboardService
 
 					if (res is not null)
 					{
-						tanksPerDay.FuelVolum += res.FuelVolume;
+						tanksPerDay.FuelVolume += res.FuelVolume;
 						tanksPerDay.Capacity += res.Tank.Capacity;
 					}
 					else
@@ -400,7 +410,7 @@ namespace FMSD_BE.Services.DashboardService
 						.OrderByDescending(e => e.CreatedAt)
 						.FirstOrDefault();
 
-						tanksPerDay.FuelVolum += lastMeasurement.FuelVolume;
+						tanksPerDay.FuelVolume += lastMeasurement.FuelVolume;
 						tanksPerDay.Capacity += lastMeasurement.Tank.Capacity;
 					}
 				}
@@ -415,7 +425,7 @@ namespace FMSD_BE.Services.DashboardService
 					[
 						new DataSetModel
 						{
-							Data = tanksPerDays.Select(e=>e.FuelVolum).ToList(),
+							Data = tanksPerDays.Select(e=>e.FuelVolume).ToList(),
 							Label = "Fuel Volume",
 							BackgroundColor= ["#00cccc33"],
 							BorderColor =["#00cccc"],
@@ -439,10 +449,10 @@ namespace FMSD_BE.Services.DashboardService
 
 				BoldValueTitle = "Available Rate",
 				//BoldValue = "FuelAll / AllCapacity * 100 for request last date",
-				BoldValue = Math.Round(((tanksPerDays.Select(e => e.FuelVolum).LastOrDefault() / tanksPerDays.Select(e => e.Capacity).LastOrDefault()) * 100)).ToString() + "%",
+				BoldValue = Math.Round(((tanksPerDays.Select(e => e.FuelVolume).LastOrDefault() / tanksPerDays.Select(e => e.Capacity).LastOrDefault()) * 100)).ToString() + "%",
 
 				//LightValue = "Math.ABS" + "FuelAll / AllCapacity * 100 for request last date - FuelAll / AllCapacity * 100 for request First date"
-				LightValue = Math.Abs(Math.Round(((tanksPerDays.Select(e => e.FuelVolum).LastOrDefault() / tanksPerDays.Select(e => e.Capacity).LastOrDefault()) * 100) - ((tanksPerDays.Select(e => e.FuelVolum).FirstOrDefault() / tanksPerDays.Select(e => e.Capacity).FirstOrDefault()) * 100))).ToString() + "%"
+				LightValue = Math.Abs(Math.Round(((tanksPerDays.Select(e => e.FuelVolume).LastOrDefault() / tanksPerDays.Select(e => e.Capacity).LastOrDefault()) * 100) - ((tanksPerDays.Select(e => e.FuelVolume).FirstOrDefault() / tanksPerDays.Select(e => e.Capacity).FirstOrDefault()) * 100))).ToString() + "%"
 			};
 
 			return new ResultWithMessage(result, string.Empty);

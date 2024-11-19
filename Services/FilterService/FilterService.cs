@@ -57,7 +57,7 @@ namespace FMSD_BE.Services.FilterService
 
 			return new ResultWithMessage(result, string.Empty);
 		}
-		public async Task<ResultWithMessage> GetTransactionStatusesAsync()
+		public async Task<ResultWithMessage> GetAllTransactionStatusesAsync()
 		{
 			var result = await _db.TransactionStatuses
 				.Select(e => e.TransStatus)
@@ -67,18 +67,18 @@ namespace FMSD_BE.Services.FilterService
 
 			return new ResultWithMessage(result, string.Empty);
 		}
-		public async Task<ResultWithMessage> GetAllTanksAsync(GetTanksRequest request)
+		public async Task<ResultWithMessage> GetAllTanksAsync(string? cityName, string? stationGuid)
 		{
 			var query = _db.Tanks
 				.Where(e => e.TankStatusId == 2 &&
 							e.Station.DeletedAt == null &&
 							!string.IsNullOrEmpty(e.Station.StationType));
 
-			if (!string.IsNullOrEmpty(request.CityName))
-				query = query.Where(e => e.Station.City.Contains(request.CityName.Trim().ToLower()));
+			if (!string.IsNullOrEmpty(cityName))
+				query = query.Where(e => e.Station.City.Contains(cityName.Trim().ToLower()));
 
-			if (!string.IsNullOrEmpty(request.StationGuid))
-				query = query.Where(e => e.Station.Guid.ToString().Contains(request.StationGuid.Trim().ToLower()));
+			if (!string.IsNullOrEmpty(stationGuid))
+				query = query.Where(e => e.Station.Guid.ToString().Contains(stationGuid.Trim().ToLower()));
 
 			var result = await query
 				.Select(e => new TankListViewModel

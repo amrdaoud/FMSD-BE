@@ -8,7 +8,7 @@ namespace FMSD_BE.Services.FilterService
 		Task<ResultWithMessage> GetAllCitiesAsync();
 		Task<ResultWithMessage> GetAllStationsAsync(string? name);
 		Task<ResultWithMessage> GetAllAlarmTypesAsync();
-		Task<ResultWithMessage> GetTransactionStatusesAsync();
-		Task<ResultWithMessage> GetAllTanksAsync(GetTanksRequest request);
+		Task<ResultWithMessage> GetAllTransactionStatusesAsync();
+		Task<ResultWithMessage> GetAllTanksAsync(string? cityName, string? stationGuid);
 	}
 }

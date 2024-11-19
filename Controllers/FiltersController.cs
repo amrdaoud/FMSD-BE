@@ -1,5 +1,4 @@
-﻿using FMSD_BE.Dtos.DashboardDtos;
-using FMSD_BE.Services.FilterService;
+﻿using FMSD_BE.Services.FilterService;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FMSD_BE.Controllers
@@ -10,8 +9,8 @@ namespace FMSD_BE.Controllers
 	{
 		private readonly IFilterService _filterService = filterService;
 
-		[HttpGet("GetAllCities")]
-		public async Task<IActionResult> GetAllCities()
+		[HttpGet("Cities")]
+		public async Task<IActionResult> Cities()
 		{
 			var result = await _filterService.GetAllCitiesAsync();
 
@@ -19,8 +18,8 @@ namespace FMSD_BE.Controllers
 		}
 
 
-		[HttpGet("GetStation")]
-		public async Task<IActionResult> GetStation(string? name)
+		[HttpGet("Stations")]
+		public async Task<IActionResult> Stations(string? name)
 		{
 			var result = await _filterService.GetAllStationsAsync(name);
 
@@ -28,8 +27,8 @@ namespace FMSD_BE.Controllers
 		}
 
 
-		[HttpGet("GetAllAlarmTypes")]
-		public async Task<IActionResult> GetAllAlarmTypes()
+		[HttpGet("AlarmTypes")]
+		public async Task<IActionResult> AlarmTypes()
 		{
 			var result = await _filterService.GetAllAlarmTypesAsync();
 
@@ -37,19 +36,19 @@ namespace FMSD_BE.Controllers
 		}
 
 
-		[HttpGet("GetTransactionStatuses")]
-		public async Task<IActionResult> GetTransactionStatuses()
+		[HttpGet("TransactionStatuses")]
+		public async Task<IActionResult> TransactionStatuses()
 		{
-			var result = await _filterService.GetTransactionStatusesAsync();
+			var result = await _filterService.GetAllTransactionStatusesAsync();
 
 			return Ok(result.Data);
 		}
 
 
-		[HttpPost("GetAllTanks")]
-		public async Task<IActionResult> GetAllTanks(GetTanksRequest request)
+		[HttpGet("Tanks")]
+		public async Task<IActionResult> Tanks(string? cityName, string? stationGuid)
 		{
-			var result = await _filterService.GetAllTanksAsync(request);
+			var result = await _filterService.GetAllTanksAsync(cityName, stationGuid);
 
 			return Ok(result.Data);
 		}
