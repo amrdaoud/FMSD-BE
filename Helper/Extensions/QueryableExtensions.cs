@@ -133,13 +133,15 @@ namespace FMSD_BE.Helper.Extensions
 
         private static Expression<Func<T, object>> toLambda<T>(string propertyName)
         {
-            var parameter = Expression.Parameter(typeof(T));
+            var parameter = Expression.Parameter(typeof(T), "x");
             var property = Expression.Property(parameter, propertyName);
-            var propertyAsObject = Expression.Convert(property, typeof(object));
-            return Expression.Lambda<Func<T, object>>(propertyAsObject, parameter);
+
+            // If the property is not of type object, cast it to object
+            var converted = Expression.Convert(property, typeof(object));
+            return Expression.Lambda<Func<T, object>>(converted, parameter);
         }
 
-       
+
 
     }
 }
