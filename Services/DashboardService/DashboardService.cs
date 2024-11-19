@@ -506,7 +506,7 @@ namespace FMSD_BE.Services.DashboardService
 
 				BoldValueTitle = "Total Alarms",
 				//BoldValue = "FuelAll / AllCapacity * 100 for request last date",
-				BoldValue = alarmsTypes.Sum(e => e.Count).ToString(),
+				BoldValue = alarmsTypes.Sum(e => e.Count).ToString("0.00"),
 
 				//LightValue = "Math.ABS" + "FuelAll / AllCapacity * 100 for request last date - FuelAll / AllCapacity * 100 for request First date"
 				LightValue = "Top: " + alarmsTypes.Where(x => x.Count == alarmsTypes.Max(e => e.Count)).Select(x => x.AlarmType).FirstOrDefault()
