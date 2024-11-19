@@ -28,7 +28,7 @@ namespace FMSD_BE.Services.ReportService.TankService
             if (input.StartDate != null && input.EndDate != null)
             {
                 input.StartDate = Utilites.convertDateToArabStandardDate((DateTime)input.StartDate);
-                input.EndDate = Utilites.convertDateToArabStandardDate((DateTime)input.EndDate);
+                input.EndDate = Utilites.convertDateToArabStandardDate((DateTime)input.EndDate).AddDays(1).AddSeconds(-1);
 
             }
 
@@ -120,84 +120,91 @@ namespace FMSD_BE.Services.ReportService.TankService
         {
             IQueryable<TankMeasurementGroupingResponseViewModel> groupedQuery = null;
 
-            //---------------------------------Tank-------------------------------
-            if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.Tank.ToString() &&
-                input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Hourly.ToString())
-            {
-                groupedQuery = query.Select(x => new {
-                    x.Tank,
-                    x.Tank.Station,
-                    x.FuelLevel,
-                    x.FuelVolume,
-                    x.WaterLevel,
-                    x.WaterVolume,
-                    x.CreatedAt,
-                    x.Temperature,
-                    x.Tcv
-                }).AsEnumerable().GroupBy(x => new { x.Tank, Hour = x.CreatedAt.Value.Hour })
-                                    .Select(g => new TankMeasurementGroupingResponseViewModel
+            IQueryable<TankMeasurementDetialsViewModel> groupedFullQuery = query.Select(x => new {
+                x.Tank,
+                x.Tank.Station,
+                x.FuelLevel,
+                x.FuelVolume,
+                x.WaterLevel,
+                x.WaterVolume,
+                x.CreatedAt,
+                x.Temperature,
+                x.Tcv
+            }).AsEnumerable().GroupBy(x => new { x.Tank, Row = x.CreatedAt })
+                                    .Select(g => new TankMeasurementDetialsViewModel
                                     {
-                                        GroupingName = $"{g.Key.Tank.Station.StationName}/{g.Key.Tank.TankName} - {g.Key.Hour:00}:00",
-                                        FuelLevel = g.Sum(x => x.FuelLevel),
-                                        FuelVolume = g.Sum(x => x.FuelVolume),
-                                        WaterLevel = g.Max(x => x.WaterLevel),
-                                        WaterVolume = g.Max(x => x.WaterVolume),
-                                        Temperature = g.Max(x => x.Temperature),
-                                        Tcv = g.Sum(x => x.Tcv)
+                                        GroupingName = $"{g.Key.Tank.Station.StationName}/{g.Key.Tank.TankName}",
+                                        Date = g.Max(x => x.CreatedAt),
+                                        FuelLevel = g.Average(x => x.FuelLevel),
+                                        FuelVolume = g.Average(x => x.FuelVolume),
+                                        WaterLevel = g.Average(x => x.WaterLevel),
+                                        WaterVolume = g.Average(x => x.WaterVolume),
+                                        Temperature = g.Average(x => x.Temperature),
+                                        Tcv = g.Average(x => x.Tcv),
+                                        TankName = g.Key.Tank.TankName,
+                                        StationName = g.Key.Tank.Station.StationName,
+                                        CityName = g.Key.Tank.Station.City
                                     }).AsQueryable();
-            }
 
-            else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.Tank.ToString() &&
+            //---------------------------------Tank-------------------------------
+
+           if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.Tank.ToString() &&
                      input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Daily.ToString())
 
             {
-                groupedQuery = query.Select(x => new {
-                    x.Tank,
-                    x.Tank.Station,
+                groupedQuery = groupedFullQuery.Select(x => new {
+                    x.TankName,
+                    x.StationName,
+                    x.CityName,
+                    x.Date,
                     x.FuelLevel,
                     x.FuelVolume,
                     x.WaterLevel,
                     x.WaterVolume,
-                    x.CreatedAt,
                     x.Temperature,
-                    x.Tcv
-                }).AsEnumerable().GroupBy(x => new { x.Tank, Day = x.CreatedAt.Value.DayOfYear })
+                    x.Tcv,
+                    x.GroupingName
+                }).AsEnumerable().GroupBy(x => new { x.GroupingName, Day = x.Date.Value.DayOfYear })
                                     .Select(g => new TankMeasurementGroupingResponseViewModel
                                     {
-                                        GroupingName = $"{g.Key.Tank.Station.StationName}/{g.Key.Tank.TankName}-{new DateTime(g.Min(x => x.CreatedAt).Value.Year, 1, 1)
-                                                        .AddDays(g.Key.Day - 1).ToString("yyyy-MM-dd")}",
-                                        FuelLevel = g.Sum(x => x.FuelLevel),
-                                        FuelVolume = g.Sum(x => x.FuelVolume),
-                                        WaterLevel = g.Max(x => x.WaterLevel),
-                                        WaterVolume = g.Max(x => x.WaterVolume),
-                                        Temperature = g.Max(x => x.Temperature),
-                                        Tcv = g.Sum(x => x.Tcv)
+                                        GroupingName = $"{g.Key.GroupingName}",
+                                        FuelLevel = g.Average(x => x.FuelLevel),
+                                        FuelVolume = g.Average(x => x.FuelVolume),
+                                        WaterLevel = g.Average(x => x.WaterLevel),
+                                        WaterVolume = g.Average(x => x.WaterVolume),
+                                        Temperature = g.Average(x => x.Temperature),
+                                        Tcv = g.Average(x => x.Tcv),
+                                        Date = new DateTime(g.Min(x => x.Date).Value.Year, 1, 1).AddDays(g.Key.Day - 1),                                      
+
                                     }).AsQueryable();
             }
 
             else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.Tank.ToString() &&
                      input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Monthly.ToString())
             {
-                groupedQuery = query.Select(x => new {
-                    x.Tank,
-                    x.Tank.Station,
+                groupedQuery = groupedFullQuery.Select(x => new {
+                    x.TankName,
+                    x.StationName,
+                    x.CityName,
+                    x.Date,
                     x.FuelLevel,
                     x.FuelVolume,
                     x.WaterLevel,
                     x.WaterVolume,
-                    x.CreatedAt,
                     x.Temperature,
-                    x.Tcv
-                }).AsEnumerable().GroupBy(x => new { x.Tank, Month = x.CreatedAt.Value.Month })
+                    x.Tcv,
+                    x.GroupingName
+                }).AsEnumerable().GroupBy(x => new { x.GroupingName, Month = x.Date.Value.Month })
                                     .Select(g => new TankMeasurementGroupingResponseViewModel
                                     {
-                                        GroupingName = $"{g.Key.Tank.Station.StationName}/{g.Key.Tank.TankName}-{g.Min(x => x.CreatedAt).Value.Year}-{CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(g.Key.Month)}-01",
-                                        FuelLevel = g.Sum(x => x.FuelLevel),
-                                        FuelVolume = g.Sum(x => x.FuelVolume),
-                                        WaterLevel = g.Max(x => x.WaterLevel),
-                                        WaterVolume = g.Max(x => x.WaterVolume),
-                                        Temperature = g.Max(x => x.Temperature),
-                                        Tcv = g.Sum(x => x.Tcv)
+                                        GroupingName = $"{g.Key.GroupingName}",
+                                        FuelLevel = g.Average(x => x.FuelLevel),
+                                        FuelVolume = g.Average(x => x.FuelVolume),
+                                        WaterLevel = g.Average(x => x.WaterLevel),
+                                        WaterVolume = g.Average(x => x.WaterVolume),
+                                        Temperature = g.Average(x => x.Temperature),
+                                        Tcv = g.Average(x => x.Tcv),
+                                        Date = new DateTime(g.Min(x => x.Date).Value.Year,g.Key.Month, 1),
                                     }).AsQueryable();
             }
 
@@ -205,53 +212,58 @@ namespace FMSD_BE.Services.ReportService.TankService
             else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.Tank.ToString() &&
                      input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Yearly.ToString())
             {
-                groupedQuery = query.Select(x => new {
-                    x.Tank,
-                    x.Tank.Station,
+                groupedQuery = groupedFullQuery.Select(x => new {
+                    x.TankName,
+                    x.StationName,
+                    x.CityName,
+                    x.Date,
                     x.FuelLevel,
                     x.FuelVolume,
                     x.WaterLevel,
                     x.WaterVolume,
-                    x.CreatedAt,
                     x.Temperature,
-                    x.Tcv
-                }).AsEnumerable().GroupBy(x => new { x.Tank, Year = x.CreatedAt.Value.Year })
+                    x.Tcv,
+                    x.GroupingName
+                }).AsEnumerable().GroupBy(x => new { x.GroupingName, Year = x.Date.Value.Year })
                                     .Select(g => new TankMeasurementGroupingResponseViewModel
                                     {
-                                        GroupingName = $"{g.Key.Tank.Station.StationName}/{g.Key.Tank.TankName}-{g.Key.Year}-01-01",
-                                        FuelLevel = g.Sum(x => x.FuelLevel),
-                                        FuelVolume = g.Sum(x => x.FuelVolume),
-                                        WaterLevel = g.Max(x => x.WaterLevel),
-                                        WaterVolume = g.Max(x => x.WaterVolume),
-                                        Temperature = g.Max(x => x.Temperature),
-                                        Tcv = g.Sum(x => x.Tcv)
+                                        GroupingName = $"{g.Key.GroupingName}",
+                                        FuelLevel = g.Average(x => x.FuelLevel),
+                                        FuelVolume = g.Average(x => x.FuelVolume),
+                                        WaterLevel = g.Average(x => x.WaterLevel),
+                                        WaterVolume = g.Average(x => x.WaterVolume),
+                                        Temperature = g.Average(x => x.Temperature),
+                                        Tcv = g.Average(x => x.Tcv),
+                                        Date = new DateTime(g.Key.Year, 1, 1),
                                     }).AsQueryable();
             }
 
             //------------------------------------Station---------------------------------
-            else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.Station.ToString() &&
-                input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Hourly.ToString())
+            else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.Station.ToString())
             {
-                groupedQuery = query.Select(x => new {
-                    x.Tank,
-                    x.Tank.Station,
+                groupedQuery = groupedFullQuery.Select(x => new {
+                    x.TankName,
+                    x.StationName,
+                    x.CityName,
+                    x.Date,
                     x.FuelLevel,
                     x.FuelVolume,
                     x.WaterLevel,
                     x.WaterVolume,
-                    x.CreatedAt,
                     x.Temperature,
-                    x.Tcv
-                }).AsEnumerable().GroupBy(x => new { x.Tank.Station, Hour = x.CreatedAt.Value.Hour })
+                    x.Tcv,
+                    x.GroupingName
+                }).AsEnumerable().GroupBy(x => new { x.StationName,x.Date })
                                     .Select(g => new TankMeasurementGroupingResponseViewModel
                                     {
-                                        GroupingName = $"{g.Key.Station.StationName} - {g.Key.Hour:00}:00",
+                                        GroupingName = $"{g.Key.StationName}",
                                         FuelLevel = g.Sum(x => x.FuelLevel),
                                         FuelVolume = g.Sum(x => x.FuelVolume),
-                                        WaterLevel = g.Max(x => x.WaterLevel),
-                                        WaterVolume = g.Max(x => x.WaterVolume),
-                                        Temperature = g.Max(x => x.Temperature),
-                                        Tcv = g.Sum(x => x.Tcv)
+                                        WaterLevel = g.Sum(x => x.WaterLevel),
+                                        WaterVolume = g.Sum(x => x.WaterVolume),
+                                        Temperature = g.Average(x => x.Temperature),
+                                        Tcv = g.Sum(x => x.Tcv),
+                                        Date = g.Max(x => x.Date)
                                     }).AsQueryable();
             }
 
@@ -259,54 +271,59 @@ namespace FMSD_BE.Services.ReportService.TankService
                      input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Daily.ToString())
 
             {
-                groupedQuery = query.Select(x => new {
-                    x.Tank,
-                    x.Tank.Station,
+                groupedQuery = groupedFullQuery.Select(x => new {
+                    x.TankName,
+                    x.StationName,
+                    x.CityName,
+                    x.Date,
                     x.FuelLevel,
                     x.FuelVolume,
                     x.WaterLevel,
                     x.WaterVolume,
-                    x.CreatedAt,
                     x.Temperature,
-                    x.Tcv
-                }).AsEnumerable().GroupBy(x => new { x.Tank.Station, Day = x.CreatedAt.Value.DayOfYear })
+                    x.Tcv,
+                    x.GroupingName
+                }).AsEnumerable().GroupBy(x => new { x.StationName, Day = x.Date.Value.DayOfYear })
                                     .Select(g => new TankMeasurementGroupingResponseViewModel
                                     {
-                                        GroupingName = $"{g.Key.Station.StationName} - " +
-                                        $" {new DateTime(g.Min(x => x.CreatedAt).Value.Year, 1, 1).AddDays(g.Key.Day - 1).ToString("yyyy-MM-dd")}",
-
+                                      
+                                        GroupingName = $"{g.Key.StationName}",
                                         FuelLevel = g.Sum(x => x.FuelLevel),
                                         FuelVolume = g.Sum(x => x.FuelVolume),
-                                        WaterLevel = g.Max(x => x.WaterLevel),
-                                        WaterVolume = g.Max(x => x.WaterVolume),
-                                        Temperature = g.Max(x => x.Temperature),
-                                        Tcv = g.Sum(x => x.Tcv)
+                                        WaterLevel = g.Sum(x => x.WaterLevel),
+                                        WaterVolume = g.Sum(x => x.WaterVolume),
+                                        Temperature = g.Average(x => x.Temperature),
+                                        Tcv = g.Sum(x => x.Tcv),
+                                        Date = new DateTime(g.Min(x => x.Date).Value.Year, 1, 1).AddDays(g.Key.Day - 1)
                                     }).AsQueryable();
             }
 
             else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.Station.ToString() &&
                      input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Monthly.ToString())
             {
-                groupedQuery = query.Select(x => new {
-                    x.Tank,
-                    x.Tank.Station,
+                groupedQuery = groupedFullQuery.Select(x => new {
+                    x.TankName,
+                    x.StationName,
+                    x.CityName,
+                    x.Date,
                     x.FuelLevel,
                     x.FuelVolume,
                     x.WaterLevel,
                     x.WaterVolume,
-                    x.CreatedAt,
                     x.Temperature,
-                    x.Tcv
-                }).AsEnumerable().GroupBy(x => new { x.Tank.Station, Month = x.CreatedAt.Value.Month })
+                    x.Tcv,
+                    x.GroupingName
+                }).AsEnumerable().GroupBy(x => new { x.StationName, Month = x.Date.Value.Month })
                                     .Select(g => new TankMeasurementGroupingResponseViewModel
                                     {
-                                        GroupingName = $"{g.Key.Station.StationName} - {g.Min(x => x.CreatedAt).Value.Year}-{g.Key.Month:D2}-01",
+                                        GroupingName = $"{g.Key.StationName}",
                                         FuelLevel = g.Sum(x => x.FuelLevel),
                                         FuelVolume = g.Sum(x => x.FuelVolume),
-                                        WaterLevel = g.Max(x => x.WaterLevel),
-                                        WaterVolume = g.Max(x => x.WaterVolume),
-                                        Temperature = g.Max(x => x.Temperature),
-                                        Tcv = g.Sum(x => x.Tcv)
+                                        WaterLevel = g.Sum(x => x.WaterLevel),
+                                        WaterVolume = g.Sum(x => x.WaterVolume),
+                                        Temperature = g.Average(x => x.Temperature),
+                                        Tcv = g.Sum(x => x.Tcv),
+                                        Date = new DateTime(g.Min(x => x.Date).Value.Year, g.Key.Month, 1)
                                     }).AsQueryable();
             }
 
@@ -314,56 +331,59 @@ namespace FMSD_BE.Services.ReportService.TankService
             else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.Station.ToString() &&
                      input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Yearly.ToString())
             {
-                groupedQuery = query.Select(x => new {
-                    x.Tank,
-                    x.Tank.Station,
+                groupedQuery = groupedFullQuery.Select(x => new {
+                    x.TankName,
+                    x.StationName,
+                    x.CityName,
+                    x.Date,
                     x.FuelLevel,
                     x.FuelVolume,
                     x.WaterLevel,
                     x.WaterVolume,
-                    x.CreatedAt,
                     x.Temperature,
-                    x.Tcv
-                }).AsEnumerable().GroupBy(x => new { x.Tank.Station, Year = x.CreatedAt.Value.Year })
+                    x.Tcv,
+                    x.GroupingName
+                }).AsEnumerable().GroupBy(x => new { x.StationName, Year = x.Date.Value.Year })
                                     .Select(g => new TankMeasurementGroupingResponseViewModel
                                     {
-                                        GroupingName = $"{g.Key.Station.StationName} - {g.Key.Year}-01-01",
+                                        GroupingName = $"{g.Key.StationName}",
                                         FuelLevel = g.Sum(x => x.FuelLevel),
                                         FuelVolume = g.Sum(x => x.FuelVolume),
-                                        WaterLevel = g.Max(x => x.WaterLevel),
-                                        WaterVolume = g.Max(x => x.WaterVolume),
-                                        Temperature = g.Max(x => x.Temperature),
-                                        Tcv = g.Sum(x => x.Tcv)
+                                        WaterLevel = g.Sum(x => x.WaterLevel),
+                                        WaterVolume = g.Sum(x => x.WaterVolume),
+                                        Temperature = g.Average(x => x.Temperature),
+                                        Tcv = g.Sum(x => x.Tcv),
+                                        Date = new DateTime(g.Key.Year,1, 1)
                                     }).AsQueryable();
             }
 
             //----------------------------------------City--------------------------------------------
 
-            else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.City.ToString() &&
-              input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Hourly.ToString())
+            else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.City.ToString())
             {
-                groupedQuery = query.Select(x => new {
-                   
-                    City = x.Tank.Station.City.ToLower(),
-                    x.Tank,
-                    x.Tank.Station,
+                groupedQuery = groupedFullQuery.Select(x => new {
+                    x.TankName,
+                    x.StationName,
+                    x.CityName,
+                    x.Date,
                     x.FuelLevel,
                     x.FuelVolume,
                     x.WaterLevel,
                     x.WaterVolume,
-                    x.CreatedAt,
                     x.Temperature,
-                    x.Tcv
-                }).AsEnumerable().GroupBy(x => new { x.City, Hour = x.CreatedAt.Value.Hour })
+                    x.Tcv,
+                    x.GroupingName
+                }).AsEnumerable().GroupBy(x => new { x.CityName, Date = x.Date })
                                     .Select(g => new TankMeasurementGroupingResponseViewModel
                                     {
-                                        GroupingName = $"{g.Key.City} - {g.Key.Hour:00}:00",
+                                        GroupingName = $"{g.Key.CityName}",
                                         FuelLevel = g.Sum(x => x.FuelLevel),
                                         FuelVolume = g.Sum(x => x.FuelVolume),
-                                        WaterLevel = g.Max(x => x.WaterLevel),
-                                        WaterVolume = g.Max(x => x.WaterVolume),
-                                        Temperature = g.Max(x => x.Temperature),
-                                        Tcv = g.Sum(x => x.Tcv)
+                                        WaterLevel = g.Sum(x => x.WaterLevel),
+                                        WaterVolume = g.Sum(x => x.WaterVolume),
+                                        Temperature = g.Average(x => x.Temperature),
+                                        Tcv = g.Sum(x => x.Tcv),
+                                        Date = g.Key.Date
                                     }).AsQueryable();
             }
 
@@ -371,56 +391,59 @@ namespace FMSD_BE.Services.ReportService.TankService
                      input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Daily.ToString())
 
             {
-                groupedQuery = query.Select(x => new {
-                    City = x.Tank.Station.City.ToLower(),
-                    x.Tank,
-                    x.Tank.Station,
+                groupedQuery = groupedFullQuery.Select(x => new {
+                    x.TankName,
+                    x.StationName,
+                    x.CityName,
+                    x.Date,
                     x.FuelLevel,
                     x.FuelVolume,
                     x.WaterLevel,
                     x.WaterVolume,
-                    x.CreatedAt,
                     x.Temperature,
-                    x.Tcv
-                }).AsEnumerable().GroupBy(x => new { x.City, Day = x.CreatedAt.Value.DayOfYear })
+                    x.Tcv,
+                    x.GroupingName
+                }).AsEnumerable().GroupBy(x => new { x.CityName, Day = x.Date.Value.DayOfYear })
                                     .Select(g => new TankMeasurementGroupingResponseViewModel
                                     {
-                                        GroupingName = $"{g.Key.City} -" +
-                                        $" {new DateTime(g.Min(x => x.CreatedAt).Value.Year, 1, 1).AddDays(g.Key.Day - 1).ToString("yyyy-MM-dd")}",
-
+                                       
+                                        GroupingName = $"{g.Key.CityName}",
                                         FuelLevel = g.Sum(x => x.FuelLevel),
                                         FuelVolume = g.Sum(x => x.FuelVolume),
-                                        WaterLevel = g.Max(x => x.WaterLevel),
-                                        WaterVolume = g.Max(x => x.WaterVolume),
-                                        Temperature = g.Max(x => x.Temperature),
-                                        Tcv = g.Sum(x => x.Tcv)
+                                        WaterLevel = g.Sum(x => x.WaterLevel),
+                                        WaterVolume = g.Sum(x => x.WaterVolume),
+                                        Temperature = g.Average(x => x.Temperature),
+                                        Tcv = g.Sum(x => x.Tcv),
+                                        Date = new DateTime(g.Min(x => x.Date).Value.Year, 1, 1).AddDays(g.Key.Day - 1)
                                     }).AsQueryable();
             }
 
             else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.City.ToString() &&
                      input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Monthly.ToString())
             {
-                groupedQuery = query.Select(x => new {
-                    City = x.Tank.Station.City.ToLower(),
-                    x.Tank,
-                    x.Tank.Station,
+                groupedQuery = groupedFullQuery.Select(x => new {
+                    x.TankName,
+                    x.StationName,
+                    x.CityName,
+                    x.Date,
                     x.FuelLevel,
                     x.FuelVolume,
                     x.WaterLevel,
                     x.WaterVolume,
-                    x.CreatedAt,
                     x.Temperature,
-                    x.Tcv
-                }).AsEnumerable().GroupBy(x => new { x.City, Month = x.CreatedAt.Value.Month })
+                    x.Tcv,
+                    x.GroupingName
+                }).AsEnumerable().GroupBy(x => new { x.CityName, Month = x.Date.Value.Month })
                                     .Select(g => new TankMeasurementGroupingResponseViewModel
                                     {
-                                        GroupingName = $"{g.Key.City} - {g.Min(x => x.CreatedAt).Value.Year}-{g.Key.Month:D2}-01",
+                                        GroupingName = $"{g.Key.CityName}",
                                         FuelLevel = g.Sum(x => x.FuelLevel),
                                         FuelVolume = g.Sum(x => x.FuelVolume),
-                                        WaterLevel = g.Max(x => x.WaterLevel),
-                                        WaterVolume = g.Max(x => x.WaterVolume),
-                                        Temperature = g.Max(x => x.Temperature),
-                                        Tcv = g.Sum(x => x.Tcv)
+                                        WaterLevel = g.Sum(x => x.WaterLevel),
+                                        WaterVolume = g.Sum(x => x.WaterVolume),
+                                        Temperature = g.Average(x => x.Temperature),
+                                        Tcv = g.Sum(x => x.Tcv),
+                                        Date = new DateTime(g.Min(x => x.Date).Value.Year, g.Key.Month, 1)
                                     }).AsQueryable();
             }
 
@@ -428,89 +451,46 @@ namespace FMSD_BE.Services.ReportService.TankService
             else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.City.ToString() &&
                      input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Yearly.ToString())
             {
-                groupedQuery = query.Select(x => new {
-                    City = x.Tank.Station.City.ToLower(),
-                    x.Tank,
-                    x.Tank.Station,
+                groupedQuery = groupedFullQuery.Select(x => new {
+                    x.TankName,
+                    x.StationName,
+                    x.CityName,
+                    x.Date,
                     x.FuelLevel,
                     x.FuelVolume,
                     x.WaterLevel,
                     x.WaterVolume,
-                    x.CreatedAt,
                     x.Temperature,
-                    x.Tcv
-                }).AsEnumerable().GroupBy(x => new { x.City, Year = x.CreatedAt.Value.Year })
+                    x.Tcv,
+                    x.GroupingName
+                }).AsEnumerable().GroupBy(x => new { x.CityName, Year = x.Date.Value.Year })
                                     .Select(g => new TankMeasurementGroupingResponseViewModel
                                     {
-                                        GroupingName = $"{g.Key.City} - {g.Key.Year}-01-01",
+                                        GroupingName = $"{g.Key.CityName}",
                                         FuelLevel = g.Sum(x => x.FuelLevel),
                                         FuelVolume = g.Sum(x => x.FuelVolume),
-                                        WaterLevel = g.Max(x => x.WaterLevel),
-                                        WaterVolume = g.Max(x => x.WaterVolume),
-                                        Temperature = g.Max(x => x.Temperature),
-                                        Tcv = g.Sum(x => x.Tcv)
+                                        WaterLevel = g.Sum(x => x.WaterLevel),
+                                        WaterVolume = g.Sum(x => x.WaterVolume),
+                                        Temperature = g.Average(x => x.Temperature),
+                                        Tcv = g.Sum(x => x.Tcv),
+                                        Date = new DateTime(g.Key.Year,1, 1)
                                     }).AsQueryable();
             }
 
             //----------------------------------------Each---------------------------------------------
-            if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.City.ToString())
-            {
-                groupedQuery = query.GroupBy(x => x.Tank.Station.City)
-                                    .Select(g => new TankMeasurementGroupingResponseViewModel
-                                    {
-                                        GroupingName = g.Key,
-                                        FuelLevel = g.Sum(x => x.FuelLevel),
-                                        FuelVolume = g.Sum(x => x.FuelVolume),
-                                        WaterLevel = g.Max(x => x.WaterLevel),
-                                        WaterVolume = g.Max(x => x.WaterVolume),
-                                        Temperature = g.Max(x => x.Temperature),
-                                        Tcv = g.Sum(x => x.Tcv),
-
-                                    });
-            }
-            else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.Station.ToString())
-            {
-                groupedQuery = query.GroupBy(x => x.Tank.Station)
-                                   .Select(g => new TankMeasurementGroupingResponseViewModel
-                                   {
-                                       GroupingName = g.Key.StationName,
-                                       FuelLevel = g.Sum(x => x.FuelLevel),
-                                       FuelVolume = g.Sum(x => x.FuelVolume),
-                                       WaterLevel = g.Max(x => x.WaterLevel),
-                                       WaterVolume = g.Max(x => x.WaterVolume),
-                                       Temperature = g.Max(x => x.Temperature),
-                                       Tcv = g.Sum(x => x.Tcv),
-
-                                   });
-            }
-            else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.Tank.ToString())
-            {
-                groupedQuery = query.GroupBy(x => x.Tank)
-                                    .Select(g => new TankMeasurementGroupingResponseViewModel
-                                    {
-                                        GroupingName = _dbContext.Stations.FirstOrDefault(x => x.Guid ==
-                                        g.Key.StationGuid).StationName + "/" + g.Key.TankName,
-                                        FuelLevel = g.Sum(x => x.FuelLevel),
-                                        FuelVolume = g.Sum(x => x.FuelVolume),
-                                        WaterLevel = g.Max(x => x.WaterLevel),
-                                        WaterVolume = g.Max(x => x.WaterVolume),
-                                        Temperature = g.Max(x => x.Temperature),
-                                        Tcv = g.Sum(x => x.Tcv),
-
-                                    });
-            }
             else if (input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Yearly.ToString())
             {
-                groupedQuery = query.GroupBy(x => x.CreatedAt.Value.Year)
+                groupedQuery = groupedFullQuery.GroupBy(x => x.Date.Value.Year)
                     .Select(g => new TankMeasurementGroupingResponseViewModel
                     {
-                        GroupingName = g.Min(x => x.CreatedAt).Value.Year + "-01-01",
+                        GroupingName = g.Min(x => x.Date).Value.Year + "-01-01",
                         FuelLevel = g.Sum(x => x.FuelLevel),
                         FuelVolume = g.Sum(x => x.FuelVolume),
-                        WaterLevel = g.Max(x => x.WaterLevel),
-                        WaterVolume = g.Max(x => x.WaterVolume),
-                        Temperature = g.Max(x => x.Temperature),
+                        WaterLevel = g.Sum(x => x.WaterLevel),
+                        WaterVolume = g.Sum(x => x.WaterVolume),
+                        Temperature = g.Average(x => x.Temperature),
                         Tcv = g.Sum(x => x.Tcv),
+                        Date = new DateTime(g.Key, 1, 1)
 
                     });
 
@@ -518,61 +498,49 @@ namespace FMSD_BE.Services.ReportService.TankService
             }
             else if (input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Monthly.ToString())
             {
-                groupedQuery = query.GroupBy(x => x.CreatedAt.Value.Month)
+                groupedQuery = groupedFullQuery.GroupBy(x => x.Date.Value.Month)
                     .Select(g => new TankMeasurementGroupingResponseViewModel
                     {
-                        GroupingName = g.Min(x => x.CreatedAt).Value.Year + "-" +
-                        CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(g.Key) + "-01",
+                       
+                        GroupingName = g.Min(x => x.Date).Value.Year + g.Key+ "-01",
                         FuelLevel = g.Sum(x => x.FuelLevel),
                         FuelVolume = g.Sum(x => x.FuelVolume),
-                        WaterLevel = g.Max(x => x.WaterLevel),
-                        WaterVolume = g.Max(x => x.WaterVolume),
-                        Temperature = g.Max(x => x.Temperature),
+                        WaterLevel = g.Sum(x => x.WaterLevel),
+                        WaterVolume = g.Sum(x => x.WaterVolume),
+                        Temperature = g.Average(x => x.Temperature),
                         Tcv = g.Sum(x => x.Tcv),
+                        Date = new DateTime(g.Key, 1, 1)
 
                     });
 
             }
             else if (input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Daily.ToString())
             {
-                groupedQuery = query.GroupBy(x => x.CreatedAt.Value.DayOfYear)
+                groupedQuery = groupedFullQuery.GroupBy(x => x.Date.Value.DayOfYear)
                     .Select(g => new TankMeasurementGroupingResponseViewModel
                     {
-                        GroupingName = new DateTime(g.Min(x => x.CreatedAt).Value.Year, 1, 1).AddDays(g.Key - 1).ToString(),
+                        GroupingName = new DateTime(g.Min(x => x.Date).Value.Year, 1, 1).AddDays(g.Key - 1).ToString(),
                         FuelLevel = g.Sum(x => x.FuelLevel),
                         FuelVolume = g.Sum(x => x.FuelVolume),
-                        WaterLevel = g.Max(x => x.WaterLevel),
-                        WaterVolume = g.Max(x => x.WaterVolume),
-                        Temperature = g.Max(x => x.Temperature),
+                        WaterLevel = g.Sum(x => x.WaterLevel),
+                        WaterVolume = g.Sum(x => x.WaterVolume),
+                        Temperature = g.Average(x => x.Temperature),
                         Tcv = g.Sum(x => x.Tcv),
+                        Date = new DateTime(g.Key, 1, 1)
 
                     });
 
             }
-            else if (input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Hourly.ToString())
+            return groupedQuery != null ? groupedQuery : groupedFullQuery.Select(x => new TankMeasurementGroupingResponseViewModel
             {
-                groupedQuery = query.GroupBy(x => x.CreatedAt.Value.Hour)
-                                    .Select(g => new TankMeasurementGroupingResponseViewModel
-                                    {
-                                        GroupingName = $"{g.Min(x => x.CreatedAt):yyyy-MM-dd HH}:00",
-                                        FuelLevel = g.Sum(x => x.FuelLevel),
-                                        FuelVolume = g.Sum(x => x.FuelVolume),
-                                        WaterLevel = g.Max(x => x.WaterLevel),
-                                        WaterVolume = g.Max(x => x.WaterVolume),
-                                        Temperature = g.Max(x => x.Temperature),
-                                        Tcv = g.Sum(x => x.Tcv),
-
-                                    });
-            }
-            return groupedQuery != null ? groupedQuery : query.Select(x => new TankMeasurementGroupingResponseViewModel
-            {
-                GroupingName = x.Tank.TankName,
+                GroupingName = x.GroupingName,
                 FuelLevel = x.FuelLevel,
                 FuelVolume = x.FuelVolume,
                 WaterLevel = x.WaterLevel,
                 WaterVolume = x.WaterVolume,
                 Temperature = x.Temperature,
                 Tcv = x.Tcv,
+                Date = x.Date
             });
         }
 
