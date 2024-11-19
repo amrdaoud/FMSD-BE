@@ -1,9 +1,7 @@
 ﻿using FMSD_BE.Data;
 using FMSD_BE.Dtos.DashboardDtos;
 using FMSD_BE.Helper;
-using FMSD_BE.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 
 namespace FMSD_BE.Services.DashboardService
 {
@@ -11,7 +9,7 @@ namespace FMSD_BE.Services.DashboardService
 	{
 		private readonly CentralizedFmsCloneContext _db = db;
 
-		public async Task<ResultWithMessage> GetCityReportAsync(string? name, bool tcv)
+		public async Task<ResultWithMessage> CityReportAsync(string? name, bool tcv)
 		{
 			var stations = _db.Stations.Where(station => station.DeletedAt == null && !string.IsNullOrEmpty(station.StationType));
 
@@ -86,27 +84,33 @@ namespace FMSD_BE.Services.DashboardService
 				Values =
 				[
 					new LookUpResponse {
-						Name = "Fill%",
-						Value = Math.Round (stationDetails.Select(e=>e.fuelVolume).Sum() / stationDetails.Select(e=>e.capacity).Sum()* 100).ToString() + "%"
+						//Name = "Fill%",
+						//Value = Math.Round (stationDetails.Select(e=>e.fuelVolume).Sum() / stationDetails.Select(e=>e.capacity).Sum()* 100).ToString() + "%"
+						Name = "Volume/L",
+						Value = Math.Round (stationDetails.Select(e=>e.fuelVolume).Sum() / 1000).ToString() + "K"
 					},
 					new LookUpResponse {
-						Name = "TCV Fill%",
-						Value = Math.Round (stationDetails.Select(e=>e.tcv).Sum() / stationDetails.Select(e=>e.capacity).Sum() * 100).ToString() + "%"
+						//Name = "TCV Fill%",
+						//Value = Math.Round (stationDetails.Select(e=>e.tcv).Sum() / stationDetails.Select(e=>e.capacity).Sum() * 100).ToString() + "%"
+						Name = "TCV Volume/L",
+						Value = Math.Round (stationDetails.Select(e=>e.tcv).Sum() / 1000).ToString() + "K"
 					},
 					new LookUpResponse {
 						Name = "Max Temperature",
 						Value = stationDetails.Select(e=>e.temperature).Max().ToString()
 					},
 					new LookUpResponse {
-						Name = "Max Water%",
-						Value = Math.Round (stationDetails.Select(e=>e.waterVolume).Sum() / stationDetails.Select(e=>e.fuelVolume).Sum() * 100).ToString() + "%"
+						//Name = "Max Water%",
+						//Value = Math.Round (stationDetails.Select(e=>e.waterVolume).Sum() / stationDetails.Select(e=>e.fuelVolume).Sum() * 100).ToString() + "%"
+						Name = "Max Water/L",
+						Value = Math.Round (stationDetails.Select(e=>e.waterVolume).Sum() / 1000).ToString() + "K"
 					},
 				]
 			};
 
 			return new ResultWithMessage(result, string.Empty);
 		}
-		public async Task<ResultWithMessage> GetStationReportAsync(string? name, bool tcv)
+		public async Task<ResultWithMessage> StationReportAsync(string? name, bool tcv)
 		{
 			var stations = _db.Stations.Where(station => station.DeletedAt == null && !string.IsNullOrEmpty(station.StationType));
 
@@ -181,27 +185,33 @@ namespace FMSD_BE.Services.DashboardService
 				Values =
 				[
 					new LookUpResponse {
-						Name = "Fill%",
-						Value = Math.Round (stationDetails.Select(e=>e.fuelVolume).Sum() / stationDetails.Select(e=>e.capacity).Sum()* 100).ToString() + "%"
+						//Name = "Fill%",
+						//Value = Math.Round (stationDetails.Select(e=>e.fuelVolume).Sum() / stationDetails.Select(e=>e.capacity).Sum()* 100).ToString() + "%"
+						Name = "Volume/L",
+						Value = Math.Round (stationDetails.Select(e=>e.fuelVolume).Sum() /1000).ToString() + "K"
 					},
 					new LookUpResponse {
-						Name = "TCV Fill%",
-						Value = Math.Round (stationDetails.Select(e=>e.tcv).Sum() / stationDetails.Select(e=>e.capacity).Sum() * 100).ToString() + "%"
+						//Name = "TCV Fill%",
+						//Value = Math.Round (stationDetails.Select(e=>e.tcv).Sum() / stationDetails.Select(e=>e.capacity).Sum() * 100).ToString() + "%"
+						Name = "TCV Volume/L",
+						Value = Math.Round (stationDetails.Select(e=>e.tcv).Sum() / 1000).ToString() + "K"
 					},
 					new LookUpResponse {
 						Name = "Max Temperature",
 						Value = stationDetails.Select(e=>e.temperature).Max().ToString()
 					},
 					new LookUpResponse {
-						Name = "Max Water%",
-						Value = Math.Round (stationDetails.Select(e=>e.waterVolume).Sum() / stationDetails.Select(e=>e.fuelVolume).Sum() * 100).ToString() + "%"
+						//Name = "Max Water%",
+						//Value = Math.Round (stationDetails.Select(e=>e.waterVolume).Sum() / stationDetails.Select(e=>e.fuelVolume).Sum() * 100).ToString() + "%"
+						Name = "Max Water/L",
+						Value = Math.Round (stationDetails.Select(e=>e.waterVolume).Sum() /1000).ToString() + "K"
 					},
 				]
 			};
 
 			return new ResultWithMessage(result, string.Empty);
 		}
-		public async Task<ResultWithMessage> GetTankReportAsync(string? name, bool tcv)
+		public async Task<ResultWithMessage> TankReportAsync(string? name, bool tcv)
 		{
 			var query = _db.Tanks.Where(e => e.TankStatusId == 2 && e.Station.DeletedAt == null && !string.IsNullOrEmpty(e.Station.StationType));
 
@@ -265,32 +275,38 @@ namespace FMSD_BE.Services.DashboardService
 				Values =
 				[
 					new LookUpResponse {
-						Name = "Fill%",
-						Value = Math.Round (tankDetails.Select(e=>e.LastMeasurement.fuelVolume).Sum() / tankDetails.Select(e=>e.LastMeasurement.capacity).Sum() * 100).ToString() + "%"
+						//Name = "Fill%",
+						//Value = Math.Round (tankDetails.Select(e=>e.LastMeasurement.fuelVolume).Sum() / tankDetails.Select(e=>e.LastMeasurement.capacity).Sum() * 100).ToString() + "%"
+						Name = "Volume/L",
+						Value = Math.Round (tankDetails.Select(e=>e.LastMeasurement.fuelVolume).Sum() / 1000).ToString() + "K"
 					},
 					new LookUpResponse {
-						Name = "TCV Fill%",
-						Value = Math.Round (tankDetails.Select(e=>e.LastMeasurement.tcv).Sum()/ tankDetails.Select(e=>e.LastMeasurement.capacity).Sum() * 100).ToString() + "%"
+						//Name = "TCV Fill%",
+						//Value = Math.Round (tankDetails.Select(e=>e.LastMeasurement.tcv).Sum()/ tankDetails.Select(e=>e.LastMeasurement.capacity).Sum() * 100).ToString() + "%"
+						Name = "TCV Volume/L",
+						Value = Math.Round (tankDetails.Select(e=>e.LastMeasurement.tcv).Sum()/ 1000).ToString() + "K"
 					},
 					new LookUpResponse {
 						Name = "Max Temperature",
 						Value = tankDetails.Select(e=>e.LastMeasurement.temperature).Max().ToString()
 					},
 					new LookUpResponse {
-						Name = "Max Water%",
-						Value = Math.Round (tankDetails.Select(e=>e.LastMeasurement.waterVolume).Sum() / tankDetails.Select(e=>e.LastMeasurement.fuelVolume).Sum() * 100).ToString() + "%"
+						//Name = "Max Water%",
+						//Value = Math.Round (tankDetails.Select(e=>e.LastMeasurement.waterVolume).Sum() / tankDetails.Select(e=>e.LastMeasurement.fuelVolume).Sum() * 100).ToString() + "%"
+						Name = "Max Water/L",
+						Value = Math.Round (tankDetails.Select(e=>e.LastMeasurement.waterVolume).Sum() / 1000).ToString() + "K"
 					}
 				]
 			};
 
 			return new ResultWithMessage(result, string.Empty);
 		}
-		public async Task<ResultWithMessage> TanksDailyFuelLevelAsync(DailyFuelLevelRequest request)
+		public async Task<ResultWithMessage> TanksDailyFuelVolumAsync(DateTime startDate, DateTime endDate)
 		{
-			if (request.StartDate != null && request.EndDate != null)
+			if (startDate != null && endDate != null)
 			{
-				request.StartDate = Utilites.convertDateToArabStandardDate((DateTime)request.StartDate);
-				request.EndDate = Utilites.convertDateToArabStandardDate((DateTime)request.EndDate).AddDays(1).AddSeconds(-1);
+				startDate = Utilites.convertDateToArabStandardDate((DateTime)startDate);
+				endDate = Utilites.convertDateToArabStandardDate((DateTime)endDate).AddDays(1).AddSeconds(-1);
 			}
 
 
@@ -362,15 +378,15 @@ namespace FMSD_BE.Services.DashboardService
 
 			//2) get date ranges
 			List<DateOnly> dateRanges = [];
-			for (DateTime date = request.StartDate; date <= request.EndDate; date = date.AddDays(1))
+			for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
 				dateRanges.Add(DateOnly.FromDateTime(date));
 
 			//3) tanks Per Days
-			List<DailyFuelLevel> tanksPerDays = [];
+			List<DailyFuelVolumViewModel> tanksPerDays = [];
 
 			foreach (var date in dateRanges)
 			{
-				var tanksPerDay = new DailyFuelLevel
+				var tanksPerDay = new DailyFuelVolumViewModel
 				{
 					Date = date,
 					FuelVolum = 0,

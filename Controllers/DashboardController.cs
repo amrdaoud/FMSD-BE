@@ -1,5 +1,4 @@
-﻿using FMSD_BE.Dtos.DashboardDtos;
-using FMSD_BE.Services.DashboardService;
+﻿using FMSD_BE.Services.DashboardService;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FMSD_BE.Controllers
@@ -13,7 +12,7 @@ namespace FMSD_BE.Controllers
 		[HttpGet("CityReport")]
 		public async Task<IActionResult> CityReport(string? name, bool tcv)
 		{
-			var result = await _dashboardService.GetCityReportAsync(name, tcv);
+			var result = await _dashboardService.CityReportAsync(name, tcv);
 
 			if (!string.IsNullOrEmpty(result.Message))
 				return BadRequest(new { message = result.Message });
@@ -24,7 +23,7 @@ namespace FMSD_BE.Controllers
 		[HttpGet("StationReport")]
 		public async Task<IActionResult> StationsReport(string? name, bool tcv)
 		{
-			var result = await _dashboardService.GetStationReportAsync(name, tcv);
+			var result = await _dashboardService.StationReportAsync(name, tcv);
 
 			if (!string.IsNullOrEmpty(result.Message))
 				return BadRequest(new { message = result.Message });
@@ -35,7 +34,7 @@ namespace FMSD_BE.Controllers
 		[HttpGet("TankReport")]
 		public async Task<IActionResult> TankReport(string? name, bool tcv)
 		{
-			var result = await _dashboardService.GetTankReportAsync(name, tcv);
+			var result = await _dashboardService.TankReportAsync(name, tcv);
 
 			if (!string.IsNullOrEmpty(result.Message))
 				return BadRequest(new { message = result.Message });
@@ -43,10 +42,10 @@ namespace FMSD_BE.Controllers
 			return Ok(result.Data);
 		}
 
-		[HttpPost("TanksDailyFuelLevel")]
-		public async Task<IActionResult> DailyFuelLevel(DailyFuelLevelRequest request)
+		[HttpGet("TanksDailyFuelVolum")]
+		public async Task<IActionResult> DailyFuelLevel(DateTime startDate, DateTime endDate)
 		{
-			var result = await _dashboardService.TanksDailyFuelLevelAsync(request);
+			var result = await _dashboardService.TanksDailyFuelVolumAsync(startDate, endDate);
 
 			if (!string.IsNullOrEmpty(result.Message))
 				return BadRequest(new { message = result.Message });
