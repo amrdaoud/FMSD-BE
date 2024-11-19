@@ -8,6 +8,6 @@
         public double WaterVolume { get; set; }
         public double Tcv { get; set; }
         public double Temperature {  get; set; }    
-
+        public DateTime? Date { get; set; }  
     }
 }
