@@ -52,5 +52,17 @@ namespace FMSD_BE.Controllers
 
 			return Ok(result.Data);
 		}
+
+
+		[HttpGet("AlarmTypesChart")]
+		public async Task<IActionResult> AlarmTypesChart(DateTime startDate, DateTime endDate)
+		{
+			var result = await _dashboardService.AlarmTypesChartAsync(startDate, endDate);
+
+			if (!string.IsNullOrEmpty(result.Message))
+				return BadRequest(new { message = result.Message });
+
+			return Ok(result.Data);
+		}
 	}
 }

@@ -457,5 +457,62 @@ namespace FMSD_BE.Services.DashboardService
 
 			return new ResultWithMessage(result, string.Empty);
 		}
+		public async Task<ResultWithMessage> AlarmTypesChartAsync(DateTime startDate, DateTime endDate)
+		{
+			if (startDate != null && endDate != null)
+			{
+				startDate = Utilites.convertDateToArabStandardDate((DateTime)startDate);
+				endDate = Utilites.convertDateToArabStandardDate((DateTime)endDate).AddDays(1).AddSeconds(-1);
+			}
+
+			var alarmsTypes = await _db.Alarms
+				.Where(e => e.CreatedAt >= startDate && e.CreatedAt <= endDate)
+				.GroupBy(g => g.Type)
+				.Select(e => new
+				{
+					AlarmType = e.Key,
+					Count = e.Count()
+				})
+				.OrderBy(e => e.AlarmType)
+				.ToListAsync();
+
+			var result = new ChartApiResponse
+			{
+				Datasets =
+					[
+						new DataSetModel
+						{
+							Data = alarmsTypes.Select(e=>(double)e.Count).ToList(),
+							Label = "Alarm Count",
+							BackgroundColor= ["#007BFF"],
+							BorderColor =["#007BFF"],
+							Fill = "start",
+						}
+				],
+				Labels = alarmsTypes.Select(e => e.AlarmType).ToList(),
+
+				Values = [],
+			};
+
+			//var isUp = result.Datasets[0].Data.LastOrDefault() - result.Datasets[0].Data.FirstOrDefault() > 0;
+
+			result.CardValue = new CardValue
+			{
+				Icon = new Icon
+				{
+					Text = "report",
+					Color = "#DC3545"
+				},
+
+				BoldValueTitle = "Total Alarms",
+				//BoldValue = "FuelAll / AllCapacity * 100 for request last date",
+				BoldValue = alarmsTypes.Sum(e => e.Count).ToString("N0"),
+
+				//LightValue = "Math.ABS" + "FuelAll / AllCapacity * 100 for request last date - FuelAll / AllCapacity * 100 for request First date"
+				LightValue = "Top: " + alarmsTypes.Where(x => x.Count == alarmsTypes.Max(e => e.Count)).Select(x => x.AlarmType).FirstOrDefault()
+			};
+
+			return new ResultWithMessage(result, string.Empty);
+		}
 	}
 }
