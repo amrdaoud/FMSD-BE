@@ -53,49 +53,5 @@ namespace FMSD_BE.Controllers
 
 			return Ok(result.Data);
 		}
-
-		[HttpGet("GetAllCities")]
-		public async Task<IActionResult> GetAllCities()
-		{
-			var result = await _dashboardService.GetAllCitiesAsync();
-
-			return Ok(result.Data);
-		}
-
-
-		[HttpGet("GetStation")]
-		public async Task<IActionResult> GetStation(string? name)
-		{
-			var result = await _dashboardService.GetAllStationsAsync(name);
-
-			return Ok(result.Data);
-		}
-
-
-		[HttpGet("GetAllAlarmTypes")]
-		public async Task<IActionResult> GetAllAlarmTypes()
-		{
-			var result = await _dashboardService.GetAllAlarmTypesAsync();
-
-			return Ok(result.Data);
-		}
-
-
-		[HttpGet("GetTransactionStatuses")]
-		public async Task<IActionResult> GetTransactionStatuses()
-		{
-			var result = await _dashboardService.GetTransactionStatusesAsync();
-
-			return Ok(result.Data);
-		}
-
-
-		[HttpPost("GetAllTanks")]
-		public async Task<IActionResult> GetAllTanks(GetTanksRequest request)
-		{
-			var result = await _dashboardService.GetAllTanksAsync(request);
-
-			return Ok(result.Data);
-		}
 	}
 }
