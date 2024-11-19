@@ -9,10 +9,5 @@ namespace FMSD_BE.Services.DashboardService
 		Task<ResultWithMessage> GetStationReportAsync(string? name, bool tcv);
 		Task<ResultWithMessage> GetTankReportAsync(string? name, bool tcv);
 		Task<ResultWithMessage> TanksDailyFuelLevelAsync(DailyFuelLevelRequest request);
-		Task<ResultWithMessage> GetAllCitiesAsync();
-		Task<ResultWithMessage> GetAllStationsAsync(string? name);
-		Task<ResultWithMessage> GetAllAlarmTypesAsync();
-		Task<ResultWithMessage> GetTransactionStatusesAsync();
-		Task<ResultWithMessage> GetAllTanksAsync(GetTanksRequest request);
 	}
 }

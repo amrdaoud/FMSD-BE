@@ -10,7 +10,7 @@ namespace FMSD_BE.Dtos.DashboardDtos
 		public DateTime EndDate { get; set; }
 	}
 
-	public class DailyFuelLevelResponse
+	public class DailyFuelLevel
 	{
 		public DateOnly Date { get; set; }
         public double FuelVolum { get; set; }
