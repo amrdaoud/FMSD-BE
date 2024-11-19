@@ -18,8 +18,8 @@ namespace FMSD_BE.Controllers
 		}
 
 
-		[HttpGet("Station")]
-		public async Task<IActionResult> Station(string? name)
+		[HttpGet("Stations")]
+		public async Task<IActionResult> Stations(string? name)
 		{
 			var result = await _filterService.GetAllStationsAsync(name);
 

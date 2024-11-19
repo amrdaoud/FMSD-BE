@@ -7,6 +7,6 @@ namespace FMSD_BE.Services.DashboardService
 		Task<ResultWithMessage> CityReportAsync(string? name, bool tcv);
 		Task<ResultWithMessage> StationReportAsync(string? name, bool tcv);
 		Task<ResultWithMessage> TankReportAsync(string? name, bool tcv);
-		Task<ResultWithMessage> TanksDailyFuelVolumAsync(DateTime startDate, DateTime endDate);
+		Task<ResultWithMessage> TanksDailyFuelVolumeAsync(DateTime startDate, DateTime endDate);
 	}
 }

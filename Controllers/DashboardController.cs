@@ -42,10 +42,10 @@ namespace FMSD_BE.Controllers
 			return Ok(result.Data);
 		}
 
-		[HttpGet("TanksDailyFuelVolum")]
-		public async Task<IActionResult> DailyFuelLevel(DateTime startDate, DateTime endDate)
+		[HttpGet("TanksDailyFuelVolume")]
+		public async Task<IActionResult> TanksDailyFuelVolume(DateTime startDate, DateTime endDate)
 		{
-			var result = await _dashboardService.TanksDailyFuelVolumAsync(startDate, endDate);
+			var result = await _dashboardService.TanksDailyFuelVolumeAsync(startDate, endDate);
 
 			if (!string.IsNullOrEmpty(result.Message))
 				return BadRequest(new { message = result.Message });
