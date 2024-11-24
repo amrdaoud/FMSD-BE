@@ -11,6 +11,7 @@
         public DateTime? AlarmTime { get;set; }
         public DateTime? InactiveTime { get;set; }
         public DateTime? AcknowledgeTime { get; set; }
+        public string StationName { get; set; }
 
     }
 }

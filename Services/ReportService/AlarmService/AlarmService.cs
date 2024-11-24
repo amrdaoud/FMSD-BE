@@ -51,7 +51,8 @@ namespace FMSD_BE.Services.ReportService.AlarmService
                 AcknowledgeUser = x.User.Username,
                 AlarmTime = x.CreatedAt,
                 InactiveTime = x.UpdatedAt,
-                AcknowledgeTime = x.AcknowledgedTime
+                AcknowledgeTime = x.AcknowledgedTime,
+                StationName = x.Station.StationName,
 
             });
 

@@ -239,33 +239,6 @@ namespace FMSD_BE.Services.ReportService.TankService
             }
 
             //------------------------------------Station---------------------------------
-            else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.Station.ToString())
-            {
-                groupedQuery = groupedFullQuery.Select(x => new {
-                    x.TankName,
-                    x.StationName,
-                    x.CityName,
-                    x.Date,
-                    x.FuelLevel,
-                    x.FuelVolume,
-                    x.WaterLevel,
-                    x.WaterVolume,
-                    x.Temperature,
-                    x.Tcv,
-                    x.GroupingName
-                }).AsEnumerable().GroupBy(x => new { x.StationName,x.Date })
-                                    .Select(g => new TankMeasurementGroupingResponseViewModel
-                                    {
-                                        GroupingName = $"{g.Key.StationName}",
-                                        FuelLevel = g.Sum(x => x.FuelLevel),
-                                        FuelVolume = g.Sum(x => x.FuelVolume),
-                                        WaterLevel = g.Sum(x => x.WaterLevel),
-                                        WaterVolume = g.Sum(x => x.WaterVolume),
-                                        Temperature = g.Average(x => x.Temperature),
-                                        Tcv = g.Sum(x => x.Tcv),
-                                        Date = g.Max(x => x.Date)
-                                    }).AsQueryable();
-            }
 
             else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.Station.ToString() &&
                      input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Daily.ToString())
@@ -357,9 +330,7 @@ namespace FMSD_BE.Services.ReportService.TankService
                                     }).AsQueryable();
             }
 
-            //----------------------------------------City--------------------------------------------
-
-            else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.City.ToString())
+            else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.Station.ToString())
             {
                 groupedQuery = groupedFullQuery.Select(x => new {
                     x.TankName,
@@ -373,19 +344,22 @@ namespace FMSD_BE.Services.ReportService.TankService
                     x.Temperature,
                     x.Tcv,
                     x.GroupingName
-                }).AsEnumerable().GroupBy(x => new { x.CityName, Date = x.Date })
+                }).AsEnumerable().GroupBy(x => new { x.StationName, x.Date })
                                     .Select(g => new TankMeasurementGroupingResponseViewModel
                                     {
-                                        GroupingName = $"{g.Key.CityName}",
+                                        GroupingName = $"{g.Key.StationName}",
                                         FuelLevel = g.Sum(x => x.FuelLevel),
                                         FuelVolume = g.Sum(x => x.FuelVolume),
                                         WaterLevel = g.Sum(x => x.WaterLevel),
                                         WaterVolume = g.Sum(x => x.WaterVolume),
                                         Temperature = g.Average(x => x.Temperature),
                                         Tcv = g.Sum(x => x.Tcv),
-                                        Date = g.Key.Date
+                                        Date = g.Max(x => x.Date)
                                     }).AsQueryable();
             }
+
+            //----------------------------------------City--------------------------------------------
+
 
             else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.City.ToString() &&
                      input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Daily.ToString())
@@ -447,7 +421,6 @@ namespace FMSD_BE.Services.ReportService.TankService
                                     }).AsQueryable();
             }
 
-
             else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.City.ToString() &&
                      input.TimeGroup == TankMesurementConst.TankMesurementTimeGroup.Yearly.ToString())
             {
@@ -474,6 +447,34 @@ namespace FMSD_BE.Services.ReportService.TankService
                                         Temperature = g.Average(x => x.Temperature),
                                         Tcv = g.Sum(x => x.Tcv),
                                         Date = new DateTime(g.Key.Year,1, 1)
+                                    }).AsQueryable();
+            }
+
+            else if (input.GroupBy == TankMesurementConst.TankMesurementGroupBy.City.ToString())
+            {
+                groupedQuery = groupedFullQuery.Select(x => new {
+                    x.TankName,
+                    x.StationName,
+                    x.CityName,
+                    x.Date,
+                    x.FuelLevel,
+                    x.FuelVolume,
+                    x.WaterLevel,
+                    x.WaterVolume,
+                    x.Temperature,
+                    x.Tcv,
+                    x.GroupingName
+                }).AsEnumerable().GroupBy(x => new { x.CityName, Date = x.Date })
+                                    .Select(g => new TankMeasurementGroupingResponseViewModel
+                                    {
+                                        GroupingName = $"{g.Key.CityName}",
+                                        FuelLevel = g.Sum(x => x.FuelLevel),
+                                        FuelVolume = g.Sum(x => x.FuelVolume),
+                                        WaterLevel = g.Sum(x => x.WaterLevel),
+                                        WaterVolume = g.Sum(x => x.WaterVolume),
+                                        Temperature = g.Average(x => x.Temperature),
+                                        Tcv = g.Sum(x => x.Tcv),
+                                        Date = g.Key.Date
                                     }).AsQueryable();
             }
 
