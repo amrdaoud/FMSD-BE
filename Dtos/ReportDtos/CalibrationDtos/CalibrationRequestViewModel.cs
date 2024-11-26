@@ -5,7 +5,7 @@ using System.ComponentModel;
 
 namespace FMSD_BE.Dtos.ReportDtos.CalibrationDtos
 {
-    [DateRange("StartDate", "EndDate", ErrorMessage = "StartDate must be less than or equal to EndDate.")]
+   // [DateRange("StartDate", "EndDate", ErrorMessage = "StartDate must be less than or equal to EndDate.")]
     [GroupKey("GroupBy", "TimeGroup")]
     public class CalibrationRequestViewModel : GeneralFilterModel
     {
@@ -17,6 +17,6 @@ namespace FMSD_BE.Dtos.ReportDtos.CalibrationDtos
         [DefaultValue("Tank")]
         public string? GroupBy { get; set; }
         public List<Guid>? TankGuids { get; set; }
-        public List<Guid>? PumpIds { get; set; } = new List<Guid>();
+        public List<Guid>? PumpIds { get; set; }
     }
 }

@@ -6,7 +6,7 @@ using System.ComponentModel;
 namespace FMSD_BE.Dtos.ReportDtos.TransactionDetailDtos
 {
 
-    [DateRange("StartDate", "EndDate", ErrorMessage = "StartDate must be less than or equal to EndDate.")]
+  //  [DateRange("StartDate", "EndDate", ErrorMessage = "StartDate must be less than or equal to EndDate.")]
     [GroupKey("GroupBy", "TimeGroup")]
     public class TransactionDetailRequestViewModel : GeneralFilterModel
     {
