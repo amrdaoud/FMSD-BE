@@ -81,7 +81,7 @@ namespace FMSD_BE.Services.ReportService.LeakageSrvice
             return exportData;
         }
 
-        private IQueryable<object> BuildDynamicGrouping(IQueryable<Leakage> query, LeakageRequestViewModel input)
+        private IQueryable<LeakageListViewModel> BuildDynamicGrouping(IQueryable<Leakage> query, LeakageRequestViewModel input)
         {
             IQueryable<LeakageListViewModel> groupedQuery = null;
 

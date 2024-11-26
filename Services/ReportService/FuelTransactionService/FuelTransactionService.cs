@@ -126,9 +126,9 @@ namespace FMSD_BE.Services.ReportService.DistributionTransactionService
             return query;
         }
 
-        private IQueryable<object> BuildDynamicGrouping(
-    IQueryable<FuelTransactionsVw> query,
-    FuelTransactionRequestViewModel input)
+        private IQueryable<FuelTransactionListViewModel> BuildDynamicGrouping(
+        IQueryable<FuelTransactionsVw> query,
+        FuelTransactionRequestViewModel input)
         {
             IQueryable<FuelTransactionListViewModel> groupedQuery = null;
 
@@ -471,8 +471,8 @@ namespace FMSD_BE.Services.ReportService.DistributionTransactionService
             return groupedQuery != null ? groupedQuery : query.Select(x => new FuelTransactionListViewModel
             {
                 GroupingName = x.StationName +"/"+ x.DetailTankName,
-                 Start = x.StartTime ,
-                 End = x.EndTime,
+                 StartTime = x.StartTime ,
+                 EndTime = x.EndTime,
                  Pumb = query.Where(y => y.TankGuid == x.TankGuid).GroupBy(t => t.PumpGuid).Count(),
                  OrderedAmount = x.OrderedAmount,
                  DispensedAmount = x.DispensedAmount,

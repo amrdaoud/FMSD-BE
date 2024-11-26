@@ -3,8 +3,8 @@
     public class FuelTransactionListViewModel
     {
         public object? GroupingName { get; set; }
-        public DateTime? Start { get; set; } 
-        public DateTime? End { get; set; }
+        public DateTime? StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
         public long Pumb { get; set; }
         public double? OrderedAmount { get;set; }
         public double? DispensedAmount { get; set; }
