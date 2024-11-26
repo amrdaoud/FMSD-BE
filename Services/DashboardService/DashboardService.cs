@@ -1,7 +1,11 @@
 ﻿using FMSD_BE.Data;
 using FMSD_BE.Dtos.DashboardDtos;
 using FMSD_BE.Helper;
+using FMSD_BE.Helper.Extensions;
+using FMSD_BE.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+using static OfficeOpenXml.ExcelErrorValue;
 
 namespace FMSD_BE.Services.DashboardService
 {
@@ -511,6 +515,80 @@ namespace FMSD_BE.Services.DashboardService
 				//LightValue = "Math.ABS" + "FuelAll / AllCapacity * 100 for request last date - FuelAll / AllCapacity * 100 for request First date"
 				LightValue = "Top: " + alarmsTypes.Where(x => x.Count == alarmsTypes.Max(e => e.Count)).Select(x => x.AlarmType).FirstOrDefault()
 			};
+
+			return new ResultWithMessage(result, string.Empty);
+		}
+		public async Task<ResultWithMessage> DailyLeackageChartAsync(string? name, DateTime startDate, DateTime endDate)
+		{
+			if (startDate != null && endDate != null)
+			{
+				startDate = Utilites.convertDateToArabStandardDate((DateTime)startDate);
+				endDate = Utilites.convertDateToArabStandardDate((DateTime)endDate).AddDays(1).AddSeconds(-1);
+			}
+
+			var dailyLeakages = (from l in _db.Leakages
+								 join t in _db.Tanks on l.TankGuid equals t.Guid
+								 join s in _db.Stations on t.StationGuid equals s.Guid
+
+								 where l.CreatedAt >= startDate &&
+									   l.CreatedAt < endDate &&
+									   l.LeakageType == "daily" &&
+									   l.Leakage1.Trim().ToLower() =="yes"
+
+								 group l by new { s.City, Date = l.CreatedAt!.Value.Date } into g
+
+								 select new
+								 {
+									 g.Key.Date,
+									 g.Key.City,
+									 DailyLeakage = g.Sum(x => x.Deviation)
+								 });
+
+			// Calculate cumulative leakage
+			var cumulativeLeakages = await dailyLeakages
+				.Select(e => new
+				{
+					e.City,
+					e.Date,
+					e.DailyLeakage,
+					CumulativeLeakage = dailyLeakages
+										.Where(x => x.City == e.City && x.Date <= e.Date)
+										.Sum(x => x.DailyLeakage)
+				})
+			.OrderBy2("Date")
+			.ThenBy(e => e.City)
+			.ToListAsync();
+
+			var resultDataSets = cumulativeLeakages
+				.GroupBy(g => g.City)
+				.Select(e => new DataSetModel
+				{
+					Data = e.Select(c => (double)c.CumulativeLeakage).ToList(),
+					Label = e.Key,
+				})
+				.ToList();
+
+			var result = new ChartApiResponse
+			{
+				Datasets = resultDataSets,
+
+				Labels = cumulativeLeakages.Select(e => e.Date.ToString()).Distinct().ToList(),
+
+				Values = [
+					new LookUpResponse{
+					 Name ="Total",
+					 Value = cumulativeLeakages.Sum(e=>e.CumulativeLeakage).ToString()
+				},
+					new LookUpResponse{
+						 Name ="Max in",
+						 Value =cumulativeLeakages
+						 .Where(x => x.CumulativeLeakage == cumulativeLeakages.Max(e => e.CumulativeLeakage))
+						 .Select(x => x.City)
+						 .FirstOrDefault()!
+					}
+				]
+			};
+
 
 			return new ResultWithMessage(result, string.Empty);
 		}

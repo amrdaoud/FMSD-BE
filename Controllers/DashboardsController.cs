@@ -5,7 +5,7 @@ namespace FMSD_BE.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	public class DashboardController(IDashboardService dashboardService) : ControllerBase
+	public class DashboardsController(IDashboardService dashboardService) : ControllerBase
 	{
 		private readonly IDashboardService _dashboardService = dashboardService;
 
@@ -62,6 +62,14 @@ namespace FMSD_BE.Controllers
 			if (!string.IsNullOrEmpty(result.Message))
 				return BadRequest(new { message = result.Message });
 
+			return Ok(result.Data);
+		}
+
+
+		[HttpGet("DailyLeackageChart")]
+		public async Task<IActionResult> DailyLeackageChart(string? name, DateTime startDate, DateTime endDate)
+		{
+			var result = await _dashboardService.DailyLeackageChartAsync(name, startDate, endDate);
 			return Ok(result.Data);
 		}
 	}
