@@ -9,5 +9,6 @@ namespace FMSD_BE.Services.DashboardService
 		Task<ResultWithMessage> TankReportAsync(string? name, bool tcv);
 		Task<ResultWithMessage> TanksDailyFuelVolumeAsync(DateTime startDate, DateTime endDate);
 		Task<ResultWithMessage> AlarmTypesChartAsync(DateTime startDate, DateTime endDate);
+		Task<ResultWithMessage> DailyLeackageChartAsync(string? name, DateTime startDate, DateTime endDate);
 	}
 }
