@@ -72,5 +72,13 @@ namespace FMSD_BE.Controllers
 			var result = await _dashboardService.DailyLeackageChartAsync(name, startDate, endDate);
 			return Ok(result.Data);
 		}
+
+
+		[HttpGet("DailyLeackagesPerStationChart")]
+		public async Task<IActionResult> DailyLeackagesPerStationChart(string? name, DateTime startDate, DateTime endDate)
+		{
+			var result = await _dashboardService.DailyLeackagesPerStationChartAsync(name, startDate, endDate);
+			return Ok(result.Data);
+		}
 	}
 }

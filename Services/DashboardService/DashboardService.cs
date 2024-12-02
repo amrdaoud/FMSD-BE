@@ -526,23 +526,17 @@ namespace FMSD_BE.Services.DashboardService
 				endDate = Utilites.convertDateToArabStandardDate((DateTime)endDate).AddDays(1).AddSeconds(-1);
 			}
 
-			var dailyLeakages = (from l in _db.Leakages
-								 join t in _db.Tanks on l.TankGuid equals t.Guid
-								 join s in _db.Stations on t.StationGuid equals s.Guid
-
-								 where l.CreatedAt >= startDate &&
-									   l.CreatedAt < endDate &&
-									   l.LeakageType == "daily" &&
-									   l.Leakage1.Trim().ToLower() =="yes"
-
-								 group l by new { s.City, Date = l.CreatedAt!.Value.Date } into g
-
-								 select new
-								 {
-									 g.Key.Date,
-									 g.Key.City,
-									 DailyLeakage = g.Sum(x => x.Deviation)
-								 });
+			var dailyLeakages = _db.Leakages
+				.Where(e => e.CreatedAt >= startDate &&
+									   e.CreatedAt < endDate &&
+									   e.LeakageType == "daily")
+				.GroupBy(e => new { e.Tank.Station.City, Date = e.CreatedAt!.Value.Date })
+				.Select(e => new
+				{
+					e.Key.Date,
+					e.Key.City,
+					DailyLeakage = e.Sum(x => x.Deviation)
+				});
 
 			// Calculate cumulative leakage
 			var cumulativeLeakages = await dailyLeakages
@@ -589,6 +583,79 @@ namespace FMSD_BE.Services.DashboardService
 				]
 			};
 
+
+			return new ResultWithMessage(result, string.Empty);
+		}
+		public async Task<ResultWithMessage> DailyLeackagesPerStationChartAsync(string? name, DateTime startDate, DateTime endDate)
+		{
+			if (startDate != null && endDate != null)
+			{
+				startDate = Utilites.convertDateToArabStandardDate((DateTime)startDate);
+				endDate = Utilites.convertDateToArabStandardDate((DateTime)endDate).AddDays(1).AddSeconds(-1);
+			}
+
+			var query = _db.Leakages.Where(e => e.Tank.Station.DeletedAt == null && !string.IsNullOrEmpty(e.Tank.Station.StationType));
+
+			if (!string.IsNullOrEmpty(name))
+				query = query.Where(e => e.Tank.Station.City.Trim().ToLower().Contains(name.Trim().ToLower()));
+
+			var dailyStationLeakages = query
+										.Where(e => e.CreatedAt >= startDate &&
+															   e.CreatedAt < endDate &&
+															   e.LeakageType == "daily")
+										.GroupBy(e => new { e.Tank.Station.StationName, Date = e.CreatedAt!.Value.Date })
+										.Select(e => new
+										{
+											e.Key.Date,
+											e.Key.StationName,
+											DailyLeakage = e.Sum(x => x.Deviation)
+										});
+
+
+			// Calculate cumulative leakage
+			var cumulativeLeakages = await dailyStationLeakages
+				.Select(e => new
+				{
+					e.StationName,
+					e.Date,
+					e.DailyLeakage,
+					CumulativeLeakage = dailyStationLeakages
+										.Where(x => x.StationName == e.StationName && x.Date <= e.Date)
+										.Sum(x => x.DailyLeakage)
+				})
+			.OrderBy2("Date")
+			.ThenBy(e => e.StationName)
+			.ToListAsync();
+
+			var resultDataSets = cumulativeLeakages
+								.GroupBy(g => g.StationName)
+								.Select(e => new DataSetModel
+								{
+									Data = e.Select(c => (double)c.CumulativeLeakage).ToList(),
+									Label = e.Key,
+								})
+								.ToList();
+
+			var result = new ChartApiResponse
+			{
+				Datasets = resultDataSets,
+
+				Labels = cumulativeLeakages.Select(e => e.Date.ToString()).Distinct().ToList(),
+
+				Values = [
+						new LookUpResponse{
+						 Name ="Total",
+						 Value = cumulativeLeakages.Sum(e=>e.CumulativeLeakage).ToString()
+						},
+						new LookUpResponse{
+							 Name ="Max in",
+							 Value =cumulativeLeakages
+							 .Where(x => x.CumulativeLeakage == cumulativeLeakages.Max(e => e.CumulativeLeakage))
+							 .Select(x => x.StationName)
+							 .FirstOrDefault()!
+						}
+					]
+			};
 
 			return new ResultWithMessage(result, string.Empty);
 		}
