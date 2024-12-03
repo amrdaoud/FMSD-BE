@@ -11,5 +11,6 @@ namespace FMSD_BE.Services.DashboardService
 		Task<ResultWithMessage> AlarmTypesChartAsync(DateTime startDate, DateTime endDate);
 		Task<ResultWithMessage> DailyLeackageChartAsync(string? name, DateTime startDate, DateTime endDate);
 		Task<ResultWithMessage> DailyLeackagesPerStationChartAsync(string? name, DateTime startDate, DateTime endDate);
+		Task<ResultWithMessage> DailyLeackagesPerTankChartAsync(string? name, DateTime startDate, DateTime endDate);
 	}
 }

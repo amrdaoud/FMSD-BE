@@ -659,5 +659,81 @@ namespace FMSD_BE.Services.DashboardService
 
 			return new ResultWithMessage(result, string.Empty);
 		}
+		public async Task<ResultWithMessage> DailyLeackagesPerTankChartAsync(string? name, DateTime startDate, DateTime endDate)
+		{
+			if (startDate != null && endDate != null)
+			{
+				startDate = Utilites.convertDateToArabStandardDate((DateTime)startDate);
+				endDate = Utilites.convertDateToArabStandardDate((DateTime)endDate).AddDays(1).AddSeconds(-1);
+			}
+
+			var query = _db.Leakages.Where(e => e.Tank.Station.DeletedAt == null && !string.IsNullOrEmpty(e.Tank.Station.StationType));
+
+			if (!string.IsNullOrEmpty(name))
+				query = query.Where(e => e.Tank.Station.StationName.Trim().ToLower().Contains(name.Trim().ToLower()));
+
+			var dailyTankLeakages = query
+									.Where(e => e.CreatedAt >= startDate &&
+															   e.CreatedAt < endDate &&
+															   e.LeakageType == "daily")
+									.GroupBy(e => new
+									{
+										TankName = e.Tank.Station.StationName + "/" + e.Tank.TankName,
+										e.CreatedAt!.Value.Date
+									})
+									.Select(e => new
+									{
+										e.Key.Date,
+										e.Key.TankName,
+										DailyLeakage = e.Sum(x => x.Deviation)
+									});
+
+			// Calculate cumulative leakage
+			var cumulativeLeakages = await dailyTankLeakages
+				.Select(e => new
+				{
+					e.TankName,
+					e.Date,
+					e.DailyLeakage,
+					CumulativeLeakage = dailyTankLeakages
+										.Where(x => x.TankName == e.TankName && x.Date <= e.Date)
+										.Sum(x => x.DailyLeakage)
+				})
+			.OrderBy2("Date")
+			.ThenBy(e => e.TankName)
+			.ToListAsync();
+
+			var resultDataSets = cumulativeLeakages
+								.GroupBy(g => g.TankName)
+								.Select(e => new DataSetModel
+								{
+									Data = e.Select(c => (double)c.CumulativeLeakage).ToList(),
+									Label = e.Key,
+								})
+								.ToList();
+
+			var result = new ChartApiResponse
+			{
+				Datasets = resultDataSets,
+
+				Labels = cumulativeLeakages.Select(e => e.Date.ToString()).Distinct().ToList(),
+
+				Values = [
+						new LookUpResponse{
+						 Name ="Total",
+						 Value = cumulativeLeakages.Sum(e=>e.CumulativeLeakage).ToString()
+						},
+						new LookUpResponse{
+							 Name ="Max in",
+							 Value =cumulativeLeakages
+							 .Where(x => x.CumulativeLeakage == cumulativeLeakages.Max(e => e.CumulativeLeakage))
+							 .Select(x => x.TankName)
+							 .FirstOrDefault()!
+						}
+					]
+			};
+
+			return new ResultWithMessage(result, string.Empty);
+		}
 	}
 }
